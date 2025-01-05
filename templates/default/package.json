@@ -1,0 +1,15 @@
+{
+  "name": "my-shelly-script",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "shelly-forge dev",
+    "build": "shelly-forge build",
+    "deploy": "shelly-forge deploy"
+  },
+  "devDependencies": {
+    "shelly-forge": "^0.0.1",
+    "dotenv": "^10.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

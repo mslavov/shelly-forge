@@ -1,0 +1,14 @@
+\.DS*
+*.swp
+/.idea/
+
+# node_modules
+node_modules/
+
+# dist
+dist/
+
+.env
+
+# lib
+lib/
