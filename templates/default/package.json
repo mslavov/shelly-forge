@@ -2,14 +2,23 @@
   "name": "my-shelly-script",
   "version": "1.0.0",
   "scripts": {
-    "dev": "shelly-forge dev",
-    "build": "shelly-forge build",
-    "deploy": "shelly-forge deploy"
+    "build": "tsc",
+    "watch:ts": "tsc -w --preserveWatchOutput",
+    "deploy": "shelly-forge deploy",
+    "watch:upload": "nodemon --watch dist -e js node_modules/shelly-forge/bin/shelly-forge.js deploy $SCRIPT_NAME",
+    "debug:setup": "shelly-forge debug on $SCRIPT_NAME",
+    "watch:logs": "shelly-forge logs $SCRIPT_NAME",
+    "wscat": "wscat --connect",
+    "debug:cleanup": "shelly-forge debug off $SCRIPT_NAME",
+    "dev": "npm run debug:setup && concurrently --kill-others-on-fail --handle-input \"npm run watch:ts\" \"npm run watch:upload\" \"npm run watch:logs\"; npm run debug:cleanup"
   },
   "devDependencies": {
     "shelly-forge": "^0.0.1",
     "dotenv": "^10.0.0",
     "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "wscat": "^6.0.1"
   }
 }
