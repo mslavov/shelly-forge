@@ -12,22 +12,28 @@ program.version('1.0.0');
 program
     .command('init')
     .description('Initialize a new Shelly script project')
-    .action(async () => {
-        const answers = await inquirer.prompt([
-            {
-                type: 'input',
-                name: 'projectName',
-                message: 'What is your project name?',
-                default: 'my-shelly-script',
-            },
-        ]);
+    .argument('[name]', 'Project name')
+    .action(async (name) => {
+        let projectName = name;
+
+        if (!projectName) {
+            const answers = await inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'projectName',
+                    message: 'What is your project name?',
+                    default: 'my-shelly-script',
+                },
+            ]);
+            projectName = answers.projectName;
+        }
 
         // Copy template files
         const templateDir = path.join(__dirname, '../templates/default');
-        const targetDir = path.join(process.cwd(), answers.projectName);
+        const targetDir = path.join(process.cwd(), projectName);
 
         await fs.copy(templateDir, targetDir);
-        console.log(chalk.green(`✨ Created new Shelly script project in ${answers.projectName}`));
+        console.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
     });
 
 program
@@ -149,6 +155,59 @@ program
             });
         } catch (error) {
             console.error(chalk.red('Logs command failed:'), error.message);
+            process.exit(1);
+        }
+    });
+
+program
+    .command('create')
+    .description('Create a new Shelly script')
+    .argument('<name>', 'Name of the script')
+    .argument('<hostname>', 'Hostname/IP of the Shelly device')
+    .action(async (name, hostname) => {
+        try {
+            // Create scripts directory if it doesn't exist
+            const scriptsDir = path.join(process.cwd(), 'src', 'scripts');
+            await fs.ensureDir(scriptsDir);
+
+            // Create the script file
+            const scriptPath = path.join(scriptsDir, `${name}.ts`);
+
+            // Check if file already exists
+            if (await fs.pathExists(scriptPath)) {
+                console.error(chalk.red(`Script ${name} already exists at ${scriptPath}`));
+                process.exit(1);
+            }
+
+            // Template for the new script
+            const scriptContent = `import { ShellyBuilder } from 'shelly-forge';
+
+export const ${name} = new ShellyBuilder()
+    .hostname('${hostname}')
+    .script(() => {
+        // Your script logic here
+        print("Hello World");
+    });
+`;
+
+            // Write the script file
+            await fs.writeFile(scriptPath, scriptContent, 'utf8');
+
+            // Check if index.ts exists and add export
+            const indexPath = path.join(process.cwd(), 'src', 'index.ts');
+            if (await fs.pathExists(indexPath)) {
+                const exportStatement = `export * from './scripts/${name}';\n`;
+                await fs.appendFile(indexPath, exportStatement);
+            } else {
+                await fs.writeFile(indexPath, `export * from './scripts/${name}';\n`);
+            }
+
+            console.log(chalk.green(`✨ Created new script at src/scripts/${name}.ts`));
+            console.log(chalk.blue('Added export to src/index.ts'));
+            console.log(chalk.yellow('\nTo start development:'));
+            console.log(chalk.yellow(`SCRIPT_NAME=${name} npm run dev`));
+        } catch (error) {
+            console.error(chalk.red('Failed to create script:'), error.message);
             process.exit(1);
         }
     });

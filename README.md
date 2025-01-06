@@ -1,73 +1,142 @@
-# Shelly Script Examples
+# Shelly Forge
 
-This project provides a modern development environment for creating and deploying Shelly Scripts to your Shelly devices. It includes TypeScript support, live reloading, and real-time device logs to make development faster and more reliable.
+Shelly Forge is a TypeScript framework and CLI tool for developing, testing, and deploying scripts to Shelly smart home devices. It provides a modern development experience with type safety, live reloading, and real-time debugging capabilities.
 
-## Features
+## Overview
 
-- 🚀 TypeScript support for better development experience
-- 📝 Automatic compilation and deployment to your device
-- 🔄 Live reload when you save changes
-- 📊 Real-time device logs in your terminal
-- 🛠️ Simple setup process with CLI tools
+Shelly Forge simplifies the development of Shelly Scripts by providing:
 
-## About Shelly Scripts
+-   Full TypeScript support with type definitions for Shelly's API
+-   CLI tools for project scaffolding and deployment
+-   Live development server with automatic compilation
+-   Real-time device logs and debugging
+-   Project templates and examples
 
-Shelly Scripts allow you to create custom automation logic directly on your Shelly device. Initial support for Shelly Script comes with firmware version 0.9 (September 2021) for Gen2 Shellies based on ESP32.
+## Quick Start
 
-## Development Setup
-
-### Prerequisites
-
-- Node.js (v16 or higher)
-- npm
-- A Shelly device with firmware version 0.9 or higher
-
-### Getting Started
-
-1. Install dependencies:
+1. Create a new project:
 
 ```bash
+npx shelly-forge init my-project
+cd my-project
 npm install
 ```
 
-2. Set up your development environment:
+2. Create your first script:
 
 ```bash
-npm run setup <device-ip> <script-name> [script-id]
+npm run create my-script 192.168.1.100
 ```
-
-For example:
-
-```bash
-npm run setup 192.168.1.100 my-script
-```
-
-This will:
-
-- Create/update the `.env` file with your device settings
-- Create a new script file in the `src` directory
 
 3. Start development:
 
 ```bash
-npm run dev
+SCRIPT_NAME=my-script npm run dev
 ```
 
-This command will:
+## Project Structure
 
-- Set up debug logging on your device
-- Watch for changes in your TypeScript files
-- Automatically compile and upload changes to your device
-- Show real-time logs from your device
+```
+my-project/
+├── build-cache/      # Build cache directory
+├── dist/             # Compiled output
+├── node_modules/     # Dependencies
+├── src/              # Source code directory
+├── .editorconfig     # Editor configuration
+├── .gitignore        # Git ignore rules
+├── package-lock.json # Lock file for dependencies
+├── package.json      # Project configuration
+└── tsconfig.json     # TypeScript configuration
+```
 
-The development server will automatically:
+## Writing Scripts
 
-- Compile TypeScript files on change
-- Upload the compiled JavaScript to your Shelly device
-- Stream debug logs from your device
+### Basic Script
 
-To stop development, press `Ctrl+C`. This will automatically clean up the debug configuration on your device.
+The script is defined as a function that returns a ShellyScript instance. The builder is used to configure the script. For example, to subscribe to temperature updates, you can use the following code:
 
-# Changelog
+```typescript
+import { ShellyBuilder } from 'shelly-forge';
 
-[Previous changelog entries...]
+export const temperatureMonitor = new ShellyBuilder().hostname('192.168.1.100').script(() => {
+    // Subscribe to temperature updates
+    Shelly.addEventHandler(async (event) => {
+        if (event.component === 'temperature') {
+            this.log(`Temperature: ${event.data.tC}°C`);
+        }
+    });
+});
+```
+
+Then the script needs to be exported from the main entry file:
+
+```typescript
+export * from './scripts/temperatureMonitor';
+```
+
+## CLI Commands
+
+### Project Management
+
+-   `shelly-forge init [name]` - Create new project
+-   `shelly-forge deploy` - Deploy scripts to device
+-   `shelly-forge debug <on|off>` - Toggle debug mode
+-   `shelly-forge create <name> <hostname>` - Create a new script
+
+### Development
+
+-   `npm run dev` - Start development server
+-   `npm run build` - Build for production
+-   `npm run deploy` - Deploy to device
+
+## API Reference
+
+### ShellyBuilder Class
+
+```typescript
+class ShellyBuilder {
+    // Configure the target device's hostname/IP
+    hostname(ip: string): ShellyBuilder;
+
+    // Configure if script should run on device boot
+    enableOnBoot(enable: boolean): ShellyBuilder;
+
+    // Create a new ShellyScript instance with the provided code
+    script(code: () => void): ShellyScript;
+}
+```
+
+### ShellyScript Class
+
+```typescript
+class ShellyScript {
+    constructor(ip: string, code: () => void, enableOnBoot: boolean);
+
+    // Enable/disable debug websocket
+    setDebug(enable: boolean): Promise<void>;
+
+    // Deploy script to device
+    deploy(name: string): Promise<boolean>;
+}
+```
+
+### Device APIs
+
+Shelly Forge provides TypeScript definitions for all device APIs. Please refer to the [Shelly API documentation](https://shelly-api-docs.shelly.cloud/) for more details.
+
+```typescript
+// Component Control
+Shelly.call('Switch.Set', { id: 0, on: true });
+```
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+-   [GitHub Issues](https://github.com/mslavov/shelly-forge/issues)
