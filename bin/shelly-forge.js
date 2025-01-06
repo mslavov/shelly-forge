@@ -33,6 +33,14 @@ program
         const targetDir = path.join(process.cwd(), projectName);
 
         await fs.copy(templateDir, targetDir);
+
+        // Rename gitignore to .gitignore
+        const gitignorePath = path.join(targetDir, 'gitignore');
+        const dotGitignorePath = path.join(targetDir, '.gitignore');
+        if (await fs.pathExists(gitignorePath)) {
+            await fs.rename(gitignorePath, dotGitignorePath);
+        }
+
         console.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
     });
 

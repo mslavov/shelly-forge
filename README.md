@@ -129,6 +129,12 @@ Shelly Forge provides TypeScript definitions for all device APIs. Please refer t
 Shelly.call('Switch.Set', { id: 0, on: true });
 ```
 
+## TODO
+
+-   [ ] Add unit tests
+-   [ ] Add Shelly device emulators
+-   [ ] Add device abstraction, i.e. decouple the script logic from the device
+
 ## Contributing
 
 Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.

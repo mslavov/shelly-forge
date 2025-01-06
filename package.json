@@ -1,7 +1,14 @@
 {
     "name": "shelly-forge",
     "version": "0.0.1",
-    "description": "A CLI tool for developing Shelly device scripts",
+    "description": "A framework for developing Shelly device scripts",
+    "author": "Milko Slavov <milko.slavov@gmail.com>",
+    "license": "MIT",
+    "homepage": "https://github.com/mslavov/shelly-forge",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mslavov/shelly-forge.git"
+    },
     "bin": {
         "shelly-forge": "./bin/shelly-forge.js"
     },
@@ -22,5 +29,17 @@
         "@types/node": "^20.0.0"
     },
     "main": "dist/index.js",
-    "types": "types/index.d.ts"
+    "types": "types/index.d.ts",
+    "keywords": [
+        "shelly",
+        "iot",
+        "automation",
+        "smart-home"
+    ],
+    "files": [
+        "dist",
+        "types",
+        "bin",
+        "templates"
+    ]
 }

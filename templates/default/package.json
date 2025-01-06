@@ -2,6 +2,7 @@
   "name": "my-shelly-script",
   "version": "1.0.0",
   "scripts": {
+    "create": "shelly-forge create",
     "build": "tsc",
     "watch:ts": "tsc -w --preserveWatchOutput",
     "deploy": "shelly-forge deploy",
