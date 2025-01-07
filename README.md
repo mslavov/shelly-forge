@@ -1,5 +1,7 @@
 # Shelly Forge
 
+[![npm version](https://badge.fury.io/js/shelly-forge.svg)](https://badge.fury.io/js/shelly-forge)
+
 Shelly Forge is a TypeScript framework and CLI tool for developing, testing, and deploying scripts to Shelly smart home devices. It provides a modern development experience with type safety, live reloading, and real-time debugging capabilities.
 
 ## Overview
