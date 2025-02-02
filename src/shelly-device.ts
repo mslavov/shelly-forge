@@ -1,9 +1,31 @@
 import axios from 'axios';
 
-export class ShellyDeployer {
+export class ShellyDevice {
     private readonly SYMBOLS_IN_CHUNK = 1024;
 
     constructor(private ip: string) {}
+
+    async setDebug(enable: boolean): Promise<void> {
+        try {
+            const response = await axios.post(`http://${this.ip}/rpc`, {
+                id: 1,
+                method: 'Sys.SetConfig',
+                params: {
+                    config: {
+                        debug: {
+                            websocket: {
+                                enable,
+                            },
+                        },
+                    },
+                },
+            });
+            console.log(`Debug websocket ${enable ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            console.error('Error setting debug mode:', error);
+            throw error;
+        }
+    }
 
     private async putChunk(scriptId: string, code: string, append: boolean = false): Promise<void> {
         try {
@@ -32,8 +54,8 @@ export class ShellyDeployer {
             console.log('Scripts:', response.data);
             return response.data.result.scripts;
         } catch (error) {
-            console.warn('Error stopping script:', error);
-            console.log('Script may not be running');
+            console.warn('Error listing scripts:', error);
+            throw error;
         }
     }
 
@@ -76,7 +98,7 @@ export class ShellyDeployer {
      * Deploy a script to a Shelly device.
      * @param name - The name of the script.
      * @param code - The code of the script.
-     * @param scriptId - The ID of the script.
+     * @param enableOnBoot - Whether to enable the script on boot.
      */
     async deploy(name: string, code: string, enableOnBoot: boolean): Promise<void> {
         try {

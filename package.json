@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
     "license": "MIT",
@@ -10,25 +10,26 @@
         "url": "https://github.com/mslavov/shelly-forge.git"
     },
     "bin": {
-        "shelly-forge": "./bin/shelly-forge.js"
+        "shelly-forge": "./dist/shelly-forge.js"
     },
     "scripts": {
         "build": "tsc",
         "watch": "tsc -w"
     },
     "dependencies": {
-        "commander": "^8.3.0",
-        "chalk": "^4.1.2",
-        "inquirer": "^8.2.0",
-        "fs-extra": "^10.0.0",
-        "ws": "^8.2.3",
-        "dotenv": "^10.0.0",
+        "@types/node": "^20.0.0",
         "axios": "^1.7.9",
+        "chalk": "^4.1.2",
+        "commander": "^8.3.0",
+        "dotenv": "^10.0.0",
+        "esbuild": "0.24.2",
+        "fs-extra": "^10.0.0",
+        "inquirer": "^8.2.0",
         "nodemon": "^2.0.15",
         "typescript": "^5.0.0",
-        "@types/node": "^20.0.0"
+        "ws": "^8.2.3"
     },
-    "main": "dist/index.js",
+    "main": "dist/shelly-forge.js",
     "types": "types/index.d.ts",
     "keywords": [
         "shelly",
@@ -39,7 +40,10 @@
     "files": [
         "dist",
         "types",
-        "bin",
         "templates"
-    ]
+    ],
+    "devDependencies": {
+        "@types/fs-extra": "^11.0.4",
+        "@types/inquirer": "^9.0.7"
+    }
 }

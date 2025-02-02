@@ -13,22 +13,22 @@ npm install
 2. Create a new script:
 
 ```bash
-npm run create my-script 192.168.1.100
+npm run create my-script '${DEVICE_HOSTNAME}' solutionA
 ```
 
-This will create a new script in `src/scripts/my-script.ts`
+This will create a new script in `src/solutionA/my-script.ts`
 
 3. Start development:
 
 ```bash
-SCRIPT_NAME=my-script npm run dev
+npm run dev
 ```
 
 ## Project Structure
 
 ```
 ├── src/             # Source code directory
-│   ├── scripts/     # Your Shelly scripts
+│   ├── solutionA/   # Your Shelly scripts for the solution
 │   └── index.ts     # Main entry file
 ├── dist/            # Compiled output
 └── node_modules/    # Dependencies
@@ -39,18 +39,12 @@ SCRIPT_NAME=my-script npm run dev
 Here's a basic example of a Shelly script that monitors temperature:
 
 ```typescript
-import { ShellyBuilder } from "shelly-forge";
-
-export const temperatureMonitor = new ShellyBuilder()
-  .hostname("192.168.1.100")
-  .script(() => {
-    // Subscribe to temperature updates
-    Shelly.addEventHandler(async (event) => {
-      if (event.component === "temperature") {
-        this.log(`Temperature: ${event.data.tC}°C`);
-      }
-    });
-  });
+// Subscribe to temperature updates
+Shelly.addEventHandler(async (event) => {
+  if (event.component === "temperature") {
+    print("Temperature: " + event.data.tC + "°C");
+  }
+});
 ```
 
 ## Available Commands
@@ -58,7 +52,7 @@ export const temperatureMonitor = new ShellyBuilder()
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run deploy` - Deploy to device
-- `npm run create <name> <hostname>` - Create a new script
+- `npm run create <name> <hostname> <solution>` - Create a new script
 
 ## Documentation
 
