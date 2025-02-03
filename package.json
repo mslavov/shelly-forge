@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
     "license": "MIT",

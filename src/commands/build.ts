@@ -17,6 +17,16 @@ export default async function build(): Promise<void> {
 
             console.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
 
+            const envVars = Object.entries(process.env)
+                .filter(([key]) => key.startsWith('SHELLY_PUBLIC_'))
+                .reduce(
+                    (acc, [key, value]) => ({
+                        ...acc,
+                        [`process.env.${key}`]: JSON.stringify(value || ''),
+                    }),
+                    {}
+                );
+
             await esbuild.build({
                 entryPoints: [scriptPath],
                 bundle: true,
@@ -25,6 +35,7 @@ export default async function build(): Promise<void> {
                 platform: 'browser',
                 minify: true,
                 supported: { arrow: false },
+                define: envVars,
             });
 
             console.log(chalk.green(`✨ Successfully bundled ${scriptName}`));

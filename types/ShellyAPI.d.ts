@@ -194,15 +194,47 @@ declare namespace BLE {
         const SCAN_RESULT: number;
         const INFINITE_SCAN: number;
 
+        interface ScanResult {
+            /** Address of the advertising device */
+            addr: string;
+            /** Type of the device address, can be one of BLE.GAP_ADDRESS_TYPE_* */
+            addr_type: number;
+            /** Advertisement data */
+            advData: string;
+            /** Scan response for active scans; a zero-length string for passive scans or when missing */
+            scanRsp: string;
+            /** Received signal strength indicator */
+            rssi: number;
+            /** The flags entry of the advertising data, if present */
+            flags?: number;
+            /** Long or short name of the device, if present in the advertising data */
+            local_name?: string;
+            /** The manufacturer data entry of the advertising data, if present. Key is the assigned number of the manufacturer */
+            manufacturer_data?: { [manufacturerId: number]: string };
+            /** List of service UUIDs advertised by the device, if present */
+            service_uuids?: string[];
+            /** Keys are service UUIDs and values contain the associated service data */
+            service_data?: { [serviceUuid: string]: string };
+            /** Transmitted power level of the packet, if present */
+            tx_power_level?: number;
+        }
+
+        interface ScanOptions {
+            duration_ms?: number;
+            active?: boolean;
+            interval_ms?: number;
+            window_ms?: number;
+        }
+
         /**
          * Starts scanning for BLE devices.
-         * @param duration_ms - Duration of the scan in milliseconds.
+         * @param options - Scan options.
          * @param callback - Function invoked on scan events.
          * @param userdata - Optional user data passed to the callback.
          */
-        function start(
-            duration_ms: number,
-            callback: (event: number, result: object | null, userdata: any) => void,
+        function Start(
+            options: ScanOptions,
+            callback?: (event: number, result: ScanResult | null, userdata: any) => void,
             userdata?: any
         ): void;
 
