@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
     "license": "MIT",
@@ -13,6 +13,8 @@
         "shelly-forge": "./dist/shelly-forge.js"
     },
     "scripts": {
+        "clean": "rm -rf dist",
+        "prepublishOnly": "npm run clean && npm run build",
         "build": "tsc",
         "watch": "tsc -w"
     },
