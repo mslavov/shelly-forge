@@ -308,6 +308,193 @@ These updates align the type definitions with the Shelly Script Language feature
 
 ---
 
+_**User**_
+
+it seems you broke the BLE.Scanner.Start() function definiton according to the official doc: ```BLE.Scanner.Start()
+Starts a scan and optionally subscribe for scan events.
+
+Scan options allow tuning for scan timings, but some restrictions apply:
+
+scan window cannot be longer than 1/3 of scan interval
+the maximum scan window is 50 ms, but 30 ms seems to be optimal
+duration must be at least 3 scan intervals long
+If these conditions are not met scanning will not start. In the future, some of these options may not be tunable or the device may choose to modify them for performance and compatibility with other firmware features. It is best to use defaults.
+
+To run a perpetual scan, invoke with a single option: {duration_ms: BLE.Scanner.INFINITE_SCAN}.
+
+BLE.Scanner.Start(options[, callback[, userdata]]) -> object or null
+
+Property	Type	Description
+options
+
+object
+
+object with scan options. All options are optional and may be omitted, substituting with defaults.
+
+Property	Type	Description
+duration_ms
+
+number
+
+duration of the scan in ms, BLE.Scanner.INFINITE_SCAN for perpetual (continuous) scan
+
+active
+
+boolean
+
+start an active scan if true, or passive if false
+
+interval_ms
+
+number
+
+scan interval in ms
+
+window_ms
+
+number
+
+scan window in ms
+
+callback
+
+function
+
+Function invoked for each scan event. If specified the call will also subscribe for scan events.
+
+Property	Type	Description
+event
+
+number
+
+the scan event, can be one of BLE.Scanner.SCAN_START, BLE.Scanner.SCAN_STOP or BLE.Scanner.SCAN_RESULT
+
+result
+
+object or null
+
+scan result object for BLE.Scanner.SCAN_RESULT, null for BLE.Scanner.SCAN_START and BLE.Scanner.SCAN_STOP
+
+Property	Type	Description
+addr
+
+string
+
+address of the advertising device
+
+addr_type
+
+number
+
+type of the device address, can be one of BLE.GAP_ADDRESS_TYPE_*
+
+advData
+
+string
+
+advertisement data
+
+scanRsp
+
+string
+
+scan response for active scans; a zero-length string for passive scans or when missing
+
+rssi
+
+number
+
+received signal strength indicator
+
+flags
+
+number
+
+the flags entry of the advertising data, if present
+
+local_name
+
+string
+
+long or short name of the device, if present in the advertising data
+
+manufacturer_data
+
+object
+
+the manufacturer data entry of the advertising data, if present. Key is the assigned number of the manufacturer and value is the associated data
+
+service_uuids
+
+array
+
+list of service UUIDs advertised by the device, if present
+
+service_data
+
+object
+
+keys are service UUIDs and values contain the associated service data, if present
+
+tx_power_level
+
+number
+
+transmitted power level of the packet, if present
+
+userdata
+
+any type
+
+The passed userdata
+
+userdata
+
+any type
+
+Can be used to pass data to the callback
+
+Return value: object with the options of the started scan or null if start failed. Prior to 1.5.0-beta1 Start will also fail if there is a scan in progress. If invoked with invalid arguments the script is aborted.```
+
+---
+
+_**Assistant**_
+
+You're right, I need to fix the BLE.Scanner.Start() function definition. Let me update it according to the documentation.
+
+---
+
+```diff
+  
+          /**
+-          * Starts scanning for BLE devices.
++          * Starts scanning for BLE devices and optionally subscribes for scan events.
+           * @param options - Scan options.
+-          * @returns True if the scan was started successfully, false otherwise.
++          * @param callback - Optional function to be called for scan events. If specified, also subscribes for scan events.
++          * @param userdata - Optional user data passed to the callback.
++          * @returns Object with the options of the started scan or null if start failed.
++          * @throws Throws an exception if arguments are invalid.
+           */
+-         function Start(options: ScanOptions): boolean;
++         function Start(
++             options: ScanOptions,
++             callback?: (event: number, result: ScanResult | null, userdata: any) => void,
++             userdata?: any
++         ): ScanOptions | null;
+  
+          /**
+```
+
+---
+
+The BLE.Scanner.Start() function definition has been corrected to match the official documentation. 
+
+Key changes:
+1. Added the optional callback parameter an
+
+---
+
 
 
 ---

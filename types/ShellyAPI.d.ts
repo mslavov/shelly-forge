@@ -315,11 +315,18 @@ declare namespace BLE {
         ): number;
 
         /**
-         * Starts scanning for BLE devices.
+         * Starts scanning for BLE devices and optionally subscribes for scan events.
          * @param options - Scan options.
-         * @returns True if the scan was started successfully, false otherwise.
+         * @param callback - Optional function to be called for scan events. If specified, also subscribes for scan events.
+         * @param userdata - Optional user data passed to the callback.
+         * @returns Object with the options of the started scan or null if start failed.
+         * @throws Throws an exception if arguments are invalid.
          */
-        function Start(options: ScanOptions): boolean;
+        function Start(
+            options: ScanOptions,
+            callback?: (event: number, result: ScanResult | null, userdata: any) => void,
+            userdata?: any
+        ): ScanOptions | null;
 
         /**
          * Stops the ongoing BLE scan.
