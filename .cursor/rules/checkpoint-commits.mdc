@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When you are about to complete the current modification, suggest a commit with meaningful message.
