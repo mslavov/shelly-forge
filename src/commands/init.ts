@@ -39,6 +39,27 @@ export default async function init(name?: string): Promise<string> {
 
     await fs.copy(templateDir, targetDir);
 
+    // Create .cursor directory and mcp.json file
+    const cursorDir = path.join(targetDir, '.cursor');
+    await fs.ensureDir(cursorDir);
+
+    const mcpConfig = {
+        "mcpServers": {
+            "shelly-forge": {
+                "command": "npx",
+                "args": [
+                    "shelly-forge",
+                    "mcp"
+                ],
+                "env": {
+                    "CURRENT_WORKING_DIRECTORY": targetDir
+                }
+            }
+        }
+    };
+
+    await fs.writeJson(path.join(cursorDir, 'mcp.json'), mcpConfig, { spaces: 4 });
+
     // Rename gitignore to .gitignore
     const gitignorePath = path.join(targetDir, 'gitignore');
     const dotGitignorePath = path.join(targetDir, '.gitignore');
