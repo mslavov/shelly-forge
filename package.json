@@ -18,7 +18,8 @@
         "prepublishOnly": "npm run clean && npm run build",
         "build": "tsc",
         "watch": "tsc -w",
-        "start": "node dist/shelly-forge.js"
+        "start": "node dist/shelly-forge.js",
+        "mcp-server": "node dist/mcp-server.js"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.8.0",

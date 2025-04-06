@@ -15,3 +15,5 @@ lib/
 *.tgz
 
 tmp/
+
+logs/

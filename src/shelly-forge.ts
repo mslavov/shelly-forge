@@ -1,52 +1,63 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import init from './commands/init.js';
-import deploy from './commands/deploy.js';
-import debug from './commands/debug.js';
-import logs from './commands/logs.js';
-import create from './commands/create.js';
-import build from './commands/build.js';
-import mcp from './commands/mcp.js';
+import { loadCommandTools } from './load-commands.js';
+import { logger } from './utils/logger.js';
 
 const program = new Command();
-
 program.version('0.1.0');
 
-program
-    .command('init')
-    .description('Initialize a new Shelly script project')
-    .argument('[name]', 'Project name')
-    .action(init);
+async function main() {
+    try {
+        // Load all commands dynamically
+        const commands = await loadCommandTools();
 
-program.command('deploy').description('Deploy the script to Shelly device').action(deploy);
+        // Register each command with Commander
+        for (const cmd of commands) {
+            const commandObj = program
+                .command(cmd.name)
+                .description(cmd.description);
 
-program
-    .command('debug')
-    .description('Turn debug mode on/off for a specific script')
-    .argument('<mode>', 'Debug mode: "on" or "off"')
-    .argument('[scriptName]', 'Name of the script (optional)')
-    .action(debug);
+            // Add arguments based on inputSchema
+            const schema = cmd.inputSchema.shape;
+            const paramKeys = Object.keys(schema);
 
-program
-    .command('logs')
-    .description('Stream logs from a Shelly script')
-    .argument('[scriptName]', 'Name of the script (optional)')
-    .action(logs);
+            // Configure arguments based on schema
+            paramKeys.forEach((key, index) => {
+                const param = schema[key];
+                const isOptional = param._def.typeName === 'ZodOptional' ||
+                    param._def.isOptional === true;
+                const description = param._def.description || `Parameter ${index + 1}`;
 
-program
-    .command('create')
-    .description('Create a new Shelly script')
-    .argument('<name>', 'Name of the script')
-    .argument('<hostname>', 'Hostname/IP of the Shelly device')
-    .argument('[solution]', 'Solution name for organizing scripts')
-    .action(create);
+                // Format: <required> or [optional]
+                const argFormat = isOptional ? `[${key}]` : `<${key}>`;
+                commandObj.argument(argFormat, description);
+            });
 
-program.command('build').description('Build all Shelly scripts using esbuild').action(build);
+            // Configure the action handler - wrap to ignore return value
+            commandObj.action(async (...args) => {
+                try {
+                    // Convert arguments array to an object matching the schema
+                    const params: Record<string, any> = {};
+                    paramKeys.forEach((key, index) => {
+                        params[key] = args[index];
+                    });
 
-program
-    .command('mcp')
-    .description('Start the Model Context Protocol (MCP) server')
-    .action(mcp);
+                    // Call the command but ignore the return value (Commander expects void)
+                    await cmd.callback(params);
+                } catch (error) {
+                    logger.error(`Error executing ${cmd.name}`, error);
+                    process.exit(1);
+                }
+            });
+        }
 
-program.parse(process.argv);
+        // Parse command line arguments
+        program.parse(process.argv);
+    } catch (error) {
+        logger.error('Failed to initialize commands', error);
+        process.exit(1);
+    }
+}
+
+main();
