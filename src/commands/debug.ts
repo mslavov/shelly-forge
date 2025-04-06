@@ -1,8 +1,23 @@
 import chalk from 'chalk';
 import { SolutionsConfig } from '../solutions-config.js';
 import { ShellyDevice } from '../shelly-device.js';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
-export default async function debug(mode: string, scriptName?: string): Promise<void> {
+export const name = 'debug';
+
+export const description = 'Enable or disable debug mode for Shelly script';
+
+export const inputSchema = z.object({
+    mode: z.enum(['on', 'off']).describe('Debug mode: on or off'),
+    scriptName: z.string().optional().describe('Name of the script (optional)')
+});
+
+export async function callback(args: { mode: 'on' | 'off', scriptName?: string }) {
+    return await debug(args.mode, args.scriptName);
+}
+
+export default async function debug(mode: string, scriptName?: string): Promise<string> {
     try {
         if (mode !== 'on' && mode !== 'off') {
             throw new Error('Debug mode must be either "on" or "off"');
@@ -19,33 +34,38 @@ export default async function debug(mode: string, scriptName?: string): Promise<
                 throw new Error(`Script "${scriptName}" not found in solutions.config.json`);
             }
 
-            console.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
+            logger.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
             const device = new ShellyDevice(script.scriptConfig.device);
             await device.setDebug(debugEnabled);
-            console.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
+            logger.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
+            return `Debug mode set to ${mode} for script ${scriptName}`;
         } else {
             // Debug all scripts
             const scripts = config.getAllScripts();
             // Keep track of devices we've already configured to avoid duplicates
             const configuredDevices = new Set<string>();
+            const configuredScripts: string[] = [];
 
             for (const { scriptName, scriptConfig } of scripts) {
                 if (configuredDevices.has(scriptConfig.device)) {
-                    console.log(
+                    logger.log(
                         chalk.yellow(`Skipping ${scriptName} as device ${scriptConfig.device} was already configured`)
                     );
                     continue;
                 }
 
-                console.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
+                logger.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
                 const device = new ShellyDevice(scriptConfig.device);
                 await device.setDebug(debugEnabled);
                 configuredDevices.add(scriptConfig.device);
-                console.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
+                configuredScripts.push(scriptName);
+                logger.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
             }
+
+            return `Debug mode set to ${mode} for ${configuredDevices.size} device(s) running ${configuredScripts.length} script(s)`;
         }
     } catch (error) {
-        console.error(chalk.red('Debug command failed:'), (error as Error).message);
-        process.exit(1);
+        logger.error('Debug command failed', error);
+        throw error;
     }
 }

@@ -3,8 +3,20 @@ import path from 'path';
 import chalk from 'chalk';
 import esbuild from 'esbuild';
 import { SolutionsConfig } from '../solutions-config.js';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
-export default async function build(): Promise<void> {
+export const name = 'build';
+
+export const description = 'Build all Shelly scripts using esbuild';
+
+export const inputSchema = z.object({});
+
+export async function callback(args: {}) {
+    return await build();
+}
+
+export default async function build(): Promise<string> {
     try {
         const config = new SolutionsConfig();
         await config.load();
@@ -12,10 +24,12 @@ export default async function build(): Promise<void> {
         await fs.ensureDir(path.join(process.cwd(), 'dist'));
 
         const scripts = config.getAllScripts();
+        const builtScripts: string[] = [];
+
         for (const { solutionName, scriptName, scriptConfig } of scripts) {
             const scriptPath = path.join(process.cwd(), scriptConfig.src);
 
-            console.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
+            logger.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
 
             const envVars = Object.entries(process.env)
                 .filter(([key]) => key.startsWith('SHELLY_PUBLIC_'))
@@ -38,16 +52,22 @@ export default async function build(): Promise<void> {
                 define: envVars,
             });
 
-            console.log(chalk.green(`✨ Successfully bundled ${scriptName}`));
+            builtScripts.push(`${solutionName}-${scriptName}`);
+            logger.log(chalk.green(`✨ Successfully bundled ${scriptName}`));
         }
 
         const solutions = config.getSolutions();
+        const solutionSummary: string[] = [];
+
         for (const solutionName of solutions) {
             const devices = config.getDevicesForSolution(solutionName);
-            console.log(chalk.blue(`Solution "${solutionName}" is mapped to devices: ${devices.join(', ')}`));
+            logger.log(chalk.blue(`Solution "${solutionName}" is mapped to devices: ${devices.join(', ')}`));
+            solutionSummary.push(`"${solutionName}" (${devices.length} devices)`);
         }
+
+        return `Successfully built ${builtScripts.length} scripts across ${solutions.length} solutions: ${solutionSummary.join(', ')}`;
     } catch (error) {
-        console.error(chalk.red('Build failed:'), (error as Error).message);
-        process.exit(1);
+        logger.error('Build failed', error);
+        throw error;
     }
 }

@@ -2,8 +2,22 @@ import inquirer from 'inquirer';
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
-export default async function init(name?: string): Promise<void> {
+export const name = 'init';
+
+export const description = 'Initialize a new Shelly script project';
+
+export const inputSchema = z.object({
+    name: z.string().optional().describe('Project name')
+});
+
+export async function callback(args: { name?: string }) {
+    return await init(args.name);
+}
+
+export default async function init(name?: string): Promise<string> {
     let projectName = name;
 
     if (!projectName) {
@@ -31,5 +45,6 @@ export default async function init(name?: string): Promise<void> {
         await fs.rename(gitignorePath, dotGitignorePath);
     }
 
-    console.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
+    logger.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
+    return `Created new Shelly script project in ${projectName}`;
 }

@@ -2,10 +2,22 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import path from 'path';
 import url from 'url';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
-export default async function mcp(): Promise<void> {
+export const name = 'mcp';
+
+export const description = 'Start the Shelly Forge MCP server';
+
+export const inputSchema = z.object({});
+
+export async function callback(args: {}) {
+    return await mcp();
+}
+
+export default async function mcp(): Promise<string> {
     try {
-        console.log(chalk.blue('Starting Shelly Forge MCP server...'));
+        logger.log(chalk.blue('Starting Shelly Forge MCP server...'));
 
         // Get the directory path of the current module
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -21,24 +33,25 @@ export default async function mcp(): Promise<void> {
 
         // Handle process events
         mcpProcess.on('error', (error) => {
-            console.error(chalk.red('Failed to start MCP server:'), error.message);
-            process.exit(1);
+            logger.error('Failed to start MCP server', error);
+            throw error;
         });
 
         // The process will keep running until terminated
-        console.log(chalk.green('MCP server running. Press Ctrl+C to terminate.'));
+        logger.log(chalk.green('MCP server running. Press Ctrl+C to terminate.'));
 
         // Handle graceful shutdown
         process.on('SIGINT', () => {
-            console.log(chalk.yellow('\nShutting down MCP server...'));
+            logger.log(chalk.yellow('\nShutting down MCP server...'));
             if (!mcpProcess.killed) {
                 mcpProcess.kill();
             }
             process.exit(0);
         });
 
+        return 'MCP server started successfully. Press Ctrl+C to terminate.';
     } catch (error) {
-        console.error(chalk.red('Failed to start MCP server:'), (error as Error).message);
-        process.exit(1);
+        logger.error('Failed to start MCP server', error);
+        throw error;
     }
 } 

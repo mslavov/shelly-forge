@@ -1,8 +1,22 @@
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { SolutionsConfig } from '../solutions-config.js';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
-export default async function logs(scriptName?: string): Promise<void> {
+export const name = 'logs';
+
+export const description = 'Stream logs from Shelly devices';
+
+export const inputSchema = z.object({
+    scriptName: z.string().optional().describe('Name of the script to stream logs from (optional)')
+});
+
+export async function callback(args: { scriptName?: string }) {
+    return await logs(args.scriptName);
+}
+
+export default async function logs(scriptName?: string): Promise<string> {
     try {
         const config = new SolutionsConfig();
         await config.load();
@@ -17,7 +31,7 @@ export default async function logs(scriptName?: string): Promise<void> {
                 throw new Error(`Script "${scriptName}" not found in solutions.config.json`);
             }
 
-            console.log(chalk.blue(`Streaming logs for script: ${scriptName} from ${script.solutionName} solution`));
+            logger.log(chalk.blue(`Streaming logs for script: ${scriptName} from ${script.solutionName} solution`));
             const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
             const wscat = spawn(npm, ['run', 'wscat', '--', `ws://${script.scriptConfig.device}/debug/log`], {
                 stdio: 'inherit',
@@ -25,14 +39,16 @@ export default async function logs(scriptName?: string): Promise<void> {
             });
 
             processes.push({ device: script.scriptConfig.device, process: wscat });
+
+            return `Started streaming logs for script ${scriptName} from device ${script.scriptConfig.device}. Press Ctrl+C to stop.`;
         } else {
             // Stream logs for all unique devices
             const uniqueDevices = new Set(config.getAllScripts().map((script) => script.scriptConfig.device));
 
-            console.log(chalk.blue(`Streaming logs from ${uniqueDevices.size} devices...`));
+            logger.log(chalk.blue(`Streaming logs from ${uniqueDevices.size} devices...`));
 
             for (const device of Array.from(uniqueDevices)) {
-                console.log(chalk.yellow(`Starting log stream for device: ${device}`));
+                logger.log(chalk.yellow(`Starting log stream for device: ${device}`));
                 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
                 const wscat = spawn(npm, ['run', 'wscat', '--', `ws://${device}/debug/log`], {
                     stdio: 'pipe', // Use pipe to handle output
@@ -44,7 +60,7 @@ export default async function logs(scriptName?: string): Promise<void> {
                     const lines = data.toString().split('\n');
                     lines.forEach((line) => {
                         if (line.trim()) {
-                            console.log(chalk.cyan(`[${device}]`), line.trim());
+                            logger.log(chalk.cyan(`[${device}]`) + ' ' + line.trim());
                         }
                     });
                 });
@@ -53,33 +69,35 @@ export default async function logs(scriptName?: string): Promise<void> {
                     const lines = data.toString().split('\n');
                     lines.forEach((line) => {
                         if (line.trim()) {
-                            console.error(chalk.red(`[${device}]`), line.trim());
+                            logger.error(chalk.red(`[${device}]`) + ' ' + line.trim());
                         }
                     });
                 });
 
                 processes.push({ device, process: wscat });
             }
+
+            return `Started streaming logs from ${uniqueDevices.size} devices. Press Ctrl+C to stop.`;
         }
 
         // Handle process errors
         processes.forEach(({ device, process }) => {
             process.on('error', (error: Error) => {
-                console.error(chalk.red(`Failed to start wscat for ${device}:`), error.message);
+                logger.error(`Failed to start wscat for ${device}`, error);
             });
         });
 
         // Handle cleanup on SIGINT (Ctrl+C)
         process.on('SIGINT', () => {
-            console.log(chalk.yellow('\nClosing all log streams...'));
+            logger.log(chalk.yellow('\nClosing all log streams...'));
             processes.forEach(({ device, process }) => {
                 process.kill();
-                console.log(chalk.yellow(`Closed log stream for ${device}`));
+                logger.log(chalk.yellow(`Closed log stream for ${device}`));
             });
             process.exit(0);
         });
     } catch (error) {
-        console.error(chalk.red('Logs command failed:'), (error as Error).message);
-        process.exit(1);
+        logger.error('Logs command failed', error);
+        throw error;
     }
 }
