@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "shelly-forge": {
+            "command": "node",
+            "args": [
+                "/Users/milkoslavov/workspace/home/shelly-forge/dist/shelly-forge.js",
+                "mcp"
+            ],
+            "cwd": "/Users/milkoslavov/workspace/home/shelly-forge"
+        }
+    }
+}

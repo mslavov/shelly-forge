@@ -98,4 +98,12 @@ export async function callback(
         logger.error(`MCP Error: discovering devices`, error);
         return `Failed to perform discovery. Error: ${error.message}`;
     }
+}
+
+/**
+ * Default export function for the discover command
+ * Scans the local network for Shelly devices using mDNS/Bonjour
+ */
+export default async function discover(scanDurationSeconds: number = 5): Promise<string> {
+    return await callback({ scanDurationSeconds });
 } 

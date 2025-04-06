@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 // Ensure logs directory exists
-const logsDir = path.join(process.cwd(), '.shelly-forge', 'logs');
+const logsDir = path.join(os.homedir(), '.shelly-forge', 'logs');
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
@@ -36,10 +37,6 @@ export const logger = {
     },
 
     debug: (message: string): void => {
-        // Write to console and file with DEBUG prefix
-        if (enableConsole) {
-            console.log(`DEBUG: ${message}`);
-        }
         logStream.write(formatMessage(`DEBUG: ${message}`));
     },
 
@@ -61,7 +58,7 @@ export const logger = {
         if (enableConsole) {
             console.error(errorMsg);
         }
-        logStream.write(formatMessage(errorMsg));
+        logStream.write(formatMessage(`ERROR: ${errorMsg}`));
     },
 
     // Close log streams on process exit

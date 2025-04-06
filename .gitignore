@@ -16,4 +16,4 @@ lib/
 
 tmp/
 
-logs/
+.shelly-forge/

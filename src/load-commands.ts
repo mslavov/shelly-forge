@@ -30,7 +30,7 @@ export async function loadCommandTools(): Promise<CommandTool[]> {
 
                 // Skip if default export is not a function
                 if (typeof commandModule.default !== 'function') {
-                    logger.log(`Skipping command file ${file}: No default export function`);
+                    logger.debug(`Skipping command file ${file}: No default export function`);
                     continue;
                 }
 
@@ -52,7 +52,7 @@ export async function loadCommandTools(): Promise<CommandTool[]> {
                     callback
                 });
 
-                logger.log(`Loaded command tool: ${name}`);
+                logger.debug(`Loaded command tool: ${name}`);
             }
         }
 

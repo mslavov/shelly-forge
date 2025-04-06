@@ -1,0 +1,78 @@
+DEBUG: Loaded command tool: build
+DEBUG: Loaded command tool: create
+DEBUG: Loaded command tool: debug
+DEBUG: Loaded command tool: deploy
+DEBUG: Loaded command tool: discover
+DEBUG: Loaded command tool: init
+DEBUG: Loaded command tool: logs
+DEBUG: Loaded command tool: mcp
+DEBUG: Starting Shelly Forge MCP server...
+Current working directory: /Users/milkoslavov/workspace/home/shelly-forge
+Environment variables: {
+  "NVM_INC": "/Users/milkoslavov/.nvm/versions/node/v22.11.0/include/node",
+  "TERM_PROGRAM": "vscode",
+  "NVM_CD_FLAGS": "-q",
+  "TERM": "xterm-256color",
+  "SHELL": "/bin/zsh",
+  "HOMEBREW_REPOSITORY": "/opt/homebrew",
+  "TMPDIR": "/var/folders/3b/sjb5mlm94jbc46fgs9g8p3lh0000gn/T/",
+  "TERM_PROGRAM_VERSION": "0.48.7",
+  "NODE_DEBUG": "*",
+  "ZDOTDIR": "/Users/milkoslavov",
+  "CURSOR_TRACE_ID": "690078bf20804b1da911d4f92b7af32c",
+  "ORIGINAL_XDG_CURRENT_DESKTOP": "undefined",
+  "MallocNanoZone": "0",
+  "ZSH": "/Users/milkoslavov/.oh-my-zsh",
+  "NVM_DIR": "/Users/milkoslavov/.nvm",
+  "USER": "milkoslavov",
+  "LS_COLORS": "di=1;36:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43",
+  "COMMAND_MODE": "unix2003",
+  "SSH_AUTH_SOCK": "/private/tmp/com.apple.launchd.bBE2kiGuND/Listeners",
+  "__CF_USER_TEXT_ENCODING": "0x1F5:0x0:0x0",
+  "PAGER": "less",
+  "LSCOLORS": "Gxfxcxdxbxegedabagacad",
+  "PATH": "/Users/milkoslavov/Downloads/google-cloud-sdk/bin:/Users/milkoslavov/.nvm/versions/node/v22.11.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/milkoslavov/Downloads/google-cloud-sdk/bin:/Users/milkoslavov/.nvm/versions/node/v22.11.0/bin:/Users/milkoslavov/.foundry/bin",
+  "USER_ZDOTDIR": "/Users/milkoslavov",
+  "__CFBundleIdentifier": "com.todesktop.230313mzl4w4u92",
+  "PWD": "/Users/milkoslavov/workspace/home/shelly-forge",
+  "LANG": "en_US.UTF-8",
+  "VSCODE_GIT_ASKPASS_EXTRA_ARGS": "",
+  "XPC_FLAGS": "0x0",
+  "XPC_SERVICE_NAME": "0",
+  "VSCODE_INJECTION": "1",
+  "SHLVL": "2",
+  "HOME": "/Users/milkoslavov",
+  "VSCODE_GIT_ASKPASS_MAIN": "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass-main.js",
+  "HOMEBREW_PREFIX": "/opt/homebrew",
+  "LESS": "-R",
+  "LOGNAME": "milkoslavov",
+  "VSCODE_GIT_IPC_HANDLE": "/var/folders/3b/sjb5mlm94jbc46fgs9g8p3lh0000gn/T/vscode-git-893f8cbfaf.sock",
+  "NVM_BIN": "/Users/milkoslavov/.nvm/versions/node/v22.11.0/bin",
+  "VSCODE_GIT_ASKPASS_NODE": "/Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Plugin).app/Contents/MacOS/Cursor Helper (Plugin)",
+  "GIT_ASKPASS": "/Applications/Cursor.app/Contents/Resources/app/extensions/git/dist/askpass.sh",
+  "INFOPATH": "/opt/homebrew/share/info:/opt/homebrew/share/info:",
+  "HOMEBREW_CELLAR": "/opt/homebrew/Cellar",
+  "DEBUG": "*",
+  "COLORTERM": "truecolor",
+  "_": "/Users/milkoslavov/.nvm/versions/node/v22.11.0/bin/node"
+}
+Starting Shelly Forge MCP Server...
+DEBUG: Loaded command tool: build
+DEBUG: Loaded command tool: create
+DEBUG: Loaded command tool: debug
+DEBUG: Loaded command tool: deploy
+DEBUG: Loaded command tool: discover
+DEBUG: Loaded command tool: init
+DEBUG: Loaded command tool: logs
+DEBUG: Loaded command tool: mcp
+Loaded 8 command tools
+Registered tool: build
+Registered tool: create
+Registered tool: debug
+Registered tool: deploy
+Registered tool: discover
+Registered tool: init
+Registered tool: logs
+Registered tool: mcp
+Connecting MCP Server transport...
+Shelly Forge MCP Server running and connected.
