@@ -4,6 +4,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
 
 export const name = 'init';
 
@@ -34,7 +35,7 @@ export default async function init(name?: string): Promise<string> {
 
     // Copy template files
     const templateDir = path.join(__dirname, '../../templates/default');
-    const targetDir = path.join(process.cwd(), projectName);
+    const targetDir = path.join(CURRENT_WORKING_DIRECTORY, projectName);
 
     await fs.copy(templateDir, targetDir);
 

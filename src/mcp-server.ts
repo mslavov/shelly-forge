@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadCommandTools } from "./load-commands.js";
 import { logger } from "./utils/logger.js";
+import { CURRENT_WORKING_DIRECTORY } from "./utils/cwd.js";
 
 // Initialize FastMCP server
 const mcp = new McpServer({ name: "shelly-forge", version: "0.1.0" });
@@ -11,7 +12,7 @@ const mcp = new McpServer({ name: "shelly-forge", version: "0.1.0" });
 export async function main() {
     try {
         logger.enableConsole(false); // Enable console output for debugging
-        logger.debug(`Current working directory: ${process.cwd()}`);
+        logger.debug(`Current working directory: ${CURRENT_WORKING_DIRECTORY}`);
         logger.debug(`Environment variables: ${JSON.stringify(process.env, null, 2)}`);
         logger.debug("Starting Shelly Forge MCP Server...");
 

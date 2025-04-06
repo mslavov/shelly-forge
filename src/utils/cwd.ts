@@ -1,0 +1,1 @@
+export const CURRENT_WORKING_DIRECTORY = process.env.CURRENT_WORKING_DIRECTORY || process.cwd();

@@ -6,6 +6,7 @@ import { ShellyDevice } from '../shelly-device.js';
 import { ScriptHashCache } from '../script-hash-cache.js';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
 
 export const name = 'deploy';
 
@@ -29,7 +30,7 @@ export default async function deploy(): Promise<string> {
             logger.log(chalk.blue(`Processing ${scriptName} from ${solutionName}...`));
 
             // Check if the built file exists
-            const builtFilePath = path.join(process.cwd(), 'dist', `${solutionName}-${scriptName}.js`);
+            const builtFilePath = path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${solutionName}-${scriptName}.js`);
             if (!(await fs.pathExists(builtFilePath))) {
                 logger.log(chalk.yellow(`Built file not found for ${scriptName}, skipping...`));
                 continue;

@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import dotenv from 'dotenv';
+import { CURRENT_WORKING_DIRECTORY } from './utils/cwd.js';
 
 export interface ScriptConfig {
     src: string;
@@ -22,7 +23,7 @@ export class SolutionsConfig {
     private readonly configPath: string;
 
     constructor(configPath: string = 'solutions.config.json') {
-        this.configPath = path.join(process.cwd(), configPath);
+        this.configPath = path.join(CURRENT_WORKING_DIRECTORY, configPath);
         this.config = {};
         this.rawConfig = {};
         // Load environment variables from .env file

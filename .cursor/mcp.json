@@ -6,7 +6,9 @@
                 "/Users/milkoslavov/workspace/home/shelly-forge/dist/shelly-forge.js",
                 "mcp"
             ],
-            "cwd": "/Users/milkoslavov/workspace/home/shelly-forge"
+            "env": {
+                "CURRENT_WORKING_DIRECTORY": "/Users/milkoslavov/workspace/home/shelly-forge"
+            }
         }
     }
 }

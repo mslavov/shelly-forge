@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
+import { CURRENT_WORKING_DIRECTORY } from './cwd.js';
 
 // Ensure logs directory exists
-const logsDir = path.join(os.homedir(), '.shelly-forge', 'logs');
+const logsDir = path.join(CURRENT_WORKING_DIRECTORY, '.shelly-forge', 'logs');
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }

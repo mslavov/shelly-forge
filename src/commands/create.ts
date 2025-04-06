@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { SolutionsConfig } from '../solutions-config.js';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
 
 export const name = 'create';
 
@@ -21,7 +22,7 @@ export async function callback(args: { name: string, hostname: string, solution?
 
 export default async function create(name: string, hostname: string, solution = 'default'): Promise<string> {
     try {
-        const baseDir = path.join(process.cwd(), 'src');
+        const baseDir = path.join(CURRENT_WORKING_DIRECTORY, 'src');
         const scriptsDir = path.join(baseDir, solution);
 
         await fs.ensureDir(scriptsDir);
@@ -50,7 +51,7 @@ export default async function create(name: string, hostname: string, solution = 
         await config.save();
         logger.log(chalk.blue('Updated solutions.config.json'));
 
-        logger.log(chalk.green(`✨ Created new script at ${path.relative(process.cwd(), scriptPath)}`));
+        logger.log(chalk.green(`✨ Created new script at ${path.relative(CURRENT_WORKING_DIRECTORY, scriptPath)}`));
         logger.log(chalk.yellow('\nTo start development:'));
         logger.log(chalk.yellow(`SCRIPT_NAME=${name} npm run dev`));
 

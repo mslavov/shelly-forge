@@ -5,6 +5,7 @@ import esbuild from 'esbuild';
 import { SolutionsConfig } from '../solutions-config.js';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
 
 export const name = 'build';
 
@@ -21,13 +22,13 @@ export default async function build(): Promise<string> {
         const config = new SolutionsConfig();
         await config.load();
 
-        await fs.ensureDir(path.join(process.cwd(), 'dist'));
+        await fs.ensureDir(path.join(CURRENT_WORKING_DIRECTORY, 'dist'));
 
         const scripts = config.getAllScripts();
         const builtScripts: string[] = [];
 
         for (const { solutionName, scriptName, scriptConfig } of scripts) {
-            const scriptPath = path.join(process.cwd(), scriptConfig.src);
+            const scriptPath = path.join(CURRENT_WORKING_DIRECTORY, scriptConfig.src);
 
             logger.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
 
@@ -44,7 +45,7 @@ export default async function build(): Promise<string> {
             await esbuild.build({
                 entryPoints: [scriptPath],
                 bundle: true,
-                outfile: path.join(process.cwd(), 'dist', `${solutionName}-${scriptName}.js`),
+                outfile: path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${solutionName}-${scriptName}.js`),
                 format: 'iife',
                 platform: 'browser',
                 minify: true,
