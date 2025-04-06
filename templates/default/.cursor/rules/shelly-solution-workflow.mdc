@@ -74,23 +74,18 @@ Shelly.call("HTTP.GET", {
 - Always refer to the solution design document when creating or updating a solution
 - Follow the TypeScript requirements in the development standards
 - Ensure component responsibilities match those defined in the design
+- Always create scripts with the command, do not manaully add scripts to the @solutions.config.json file
 
-## `shelly-forge` MCP Server Tools
+## Use `shelly-forge` MCP Server Tools
 
-### `discover`
+### Use `discover` tool to find Shelly devices on the network
 **Description:** Discover Shelly devices on the network  
 **Parameters:**  
 - `scanDurationSeconds` (optional): The number of seconds to scan for Shelly devices (default: 5, min: 1, max: 60)  
 
 Uses mDNS/Bonjour to scan the local network for Shelly devices and returns information about discovered devices including name, IP address, port, model, and ID.
 
-### `deploy`
-**Description:** Deploy scripts to Shelly devices  
-**Parameters:** None  
-
-Deploys all built scripts to their respective Shelly devices as specified in the configuration. Only deploys scripts that have changed since the last deployment.
-
-### `create`
+### Use `create` tool to create a new Shelly script  
 **Description:** Create a new Shelly script  
 **Parameters:**  
 - `name`: Name of the script  
@@ -99,7 +94,15 @@ Deploys all built scripts to their respective Shelly devices as specified in the
 
 Creates a new script file with basic "Hello World" content and updates the configuration to associate it with the specified Shelly device.
 
-### `build`
+### Use `deploy` tool to Deploy scripts to Shelly devices
+**Description:** Deploy scripts to Shelly devices  
+**Parameters:**
+- `scriptName` (optional): Name of the script to deploy
+
+Deploys all or specfic already built script(s) to their respective Shelly devices as specified in the configuration. Only deploys scripts that have changed since the last deployment.
+
+
+### Use `build` tool to build Shelly scripts
 **Description:** Build all Shelly scripts using esbuild  
 **Parameters:** None  
 

@@ -28,7 +28,7 @@ export async function main() {
             logger.debug(`Loaded ${commandTools.length} command tools`);
 
             for (const tool of commandTools) {
-                if (tool.name === "mcp") {
+                if (["mcp", "init"].includes(tool.name)) {
                     logger.debug(`Skipping tool: ${tool.name} to avoid circular reference`);
                     continue;
                 }
