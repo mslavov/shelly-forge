@@ -11,7 +11,7 @@ export default async function mcp(): Promise<void> {
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
         // Get the path to the MCP server file
-        const serverPath = path.resolve(__dirname, '../mcp/server.js');
+        const serverPath = path.resolve(__dirname, '../mcp-server.js');
 
         // Spawn the MCP server as a child process
         const mcpProcess = spawn('node', [serverPath], {
