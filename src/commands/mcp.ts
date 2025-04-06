@@ -1,11 +1,12 @@
-import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { main as mcpServerMain } from '../mcp-server.js';
+import { z } from 'zod';
+
 export const name = 'mcp';
 
 export const description = 'Start the Shelly Forge MCP server';
 
-export const inputSchema = z.object({});
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {};
 
 export async function callback(args: {}) {
     return await mcp();

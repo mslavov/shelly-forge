@@ -28,6 +28,10 @@ export async function main() {
             logger.debug(`Loaded ${commandTools.length} command tools`);
 
             for (const tool of commandTools) {
+                if (tool.name === "mcp") {
+                    logger.debug(`Skipping tool: ${tool.name} to avoid circular reference`);
+                    continue;
+                }
                 // Adapt the callback to return in MCP format
                 const adaptedCallback = async (args: any) => {
                     try {
@@ -42,7 +46,7 @@ export async function main() {
                 mcp.tool(
                     tool.name,
                     tool.description,
-                    tool.inputSchema.shape,
+                    tool.inputSchema,
                     adaptedCallback
                 );
                 logger.debug(`Registered tool: ${tool.name}`);

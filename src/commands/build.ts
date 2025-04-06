@@ -11,7 +11,7 @@ export const name = 'build';
 
 export const description = 'Build all Shelly scripts using esbuild';
 
-export const inputSchema = z.object({});
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {};
 
 export async function callback(args: {}) {
     return await build();

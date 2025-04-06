@@ -11,7 +11,7 @@ async function main() {
     try {
         // Load all commands dynamically
         const commands = await loadCommandTools();
-
+        logger.debug(`Loaded ${commands.length} commands`);
         // Register each command with Commander
         for (const cmd of commands) {
             const commandObj = program
@@ -19,7 +19,7 @@ async function main() {
                 .description(cmd.description);
 
             // Add arguments based on inputSchema
-            const schema = cmd.inputSchema.shape;
+            const schema = cmd.inputSchema;
             const paramKeys = Object.keys(schema);
 
             // Configure arguments based on schema
@@ -42,11 +42,13 @@ async function main() {
                     paramKeys.forEach((key, index) => {
                         params[key] = args[index];
                     });
+                    logger.debug(`Executing ${cmd.name} with args: ${JSON.stringify(params)}`);
 
                     // Call the command but ignore the return value (Commander expects void)
                     await cmd.callback(params);
                 } catch (error) {
                     logger.error(`Error executing ${cmd.name}`, error);
+                    logger.debug(`Error executing ${cmd.name}: ${error}`);
                     process.exit(1);
                 }
             });
@@ -56,6 +58,7 @@ async function main() {
         program.parse(process.argv);
     } catch (error) {
         logger.error('Failed to initialize commands', error);
+        logger.debug(`Error: ${error}`);
         process.exit(1);
     }
 }

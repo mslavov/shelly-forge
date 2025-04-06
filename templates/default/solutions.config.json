@@ -1,14 +1,1 @@
-{
-  "boiler": {
-    "mqtt": {
-      "src": "src/boiler/mqtt.ts",
-      "device": "${BOILER_HOSTNAME}",
-      "enableOnBoot": true
-    },
-    "thermostat": {
-      "src": "src/boiler/thermostat.ts",
-      "device": "${BOILER_HOSTNAME}",
-      "enableOnBoot": true
-    }
-  }
-}
+{}

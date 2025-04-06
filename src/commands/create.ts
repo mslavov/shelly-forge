@@ -10,11 +10,11 @@ export const name = 'create';
 
 export const description = 'Create a new Shelly script';
 
-export const inputSchema = z.object({
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
     name: z.string().describe('Name of the script'),
     hostname: z.string().describe('Hostname/IP of the Shelly device'),
     solution: z.string().optional().describe('Solution name for organizing scripts')
-});
+};
 
 export async function callback(args: { name: string, hostname: string, solution?: string }) {
     return await create(args.name, args.hostname, args.solution);

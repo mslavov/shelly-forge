@@ -5,14 +5,18 @@ import chalk from 'chalk';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const name = 'init';
 
 export const description = 'Initialize a new Shelly script project';
 
-export const inputSchema = z.object({
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
     name: z.string().optional().describe('Project name')
-});
+};
 
 export async function callback(args: { name?: string }) {
     return await init(args.name);

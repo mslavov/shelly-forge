@@ -7,7 +7,7 @@ import { logger } from './utils/logger.js';
 export interface CommandTool {
     name: string;
     description: string;
-    inputSchema: z.ZodObject<any>;
+    inputSchema: { [key: string]: z.ZodTypeAny };
     callback: (args: any) => Promise<any>;
 }
 
@@ -28,37 +28,21 @@ export async function loadCommandTools(): Promise<CommandTool[]> {
                 const commandPath = path.join(commandsDir, file);
                 const commandModule = await import(url.pathToFileURL(commandPath).toString());
 
-                // Skip if default export is not a function
-                if (typeof commandModule.default !== 'function') {
-                    logger.debug(`Skipping command file ${file}: No default export function`);
-                    continue;
-                }
-
-                // Get the command name from the filename (without extension)
-                const name = file.replace(/\.js$/, '');
-
-                // Create input schema based on function parameters
-                const inputSchema = inferInputSchema(commandModule.default);
-
-                // Create the callback function
-                const callback = async (args: any) => {
-                    return await commandModule.default(...Object.values(args));
-                };
-
                 commandTools.push({
-                    name,
-                    description: `Command: ${name}`,
-                    inputSchema,
-                    callback
+                    name: commandModule.name,
+                    description: commandModule.description,
+                    inputSchema: commandModule.inputSchema,
+                    callback: commandModule.callback
                 });
 
-                logger.debug(`Loaded command tool: ${name}`);
+                logger.debug(`Loaded command tool: ${commandModule.name}`);
             }
         }
 
         return commandTools;
     } catch (error) {
         logger.error('Failed to load command tools', error);
+        logger.debug(`Failed to load command tools: ${error}`);
         return [];
     }
 }

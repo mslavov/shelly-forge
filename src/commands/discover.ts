@@ -68,7 +68,7 @@ export async function findShellyDevicesOnNetwork(
 
 export const name = "discover";
 
-export const inputSchema = z.object({
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
     scanDurationSeconds: z
         .number()
         .int()
@@ -77,18 +77,18 @@ export const inputSchema = z.object({
         .optional()
         .default(5)
         .describe("The number of seconds to scan for Shelly devices."),
-});
+};
+
+export const description = "Discover Shelly devices on the network";
 
 export async function callback(
-    input: z.infer<typeof inputSchema>,
+    { scanDurationSeconds }: { scanDurationSeconds: number },
 ): Promise<string> {
     /**
      * Scans the local network for Shelly devices using mDNS/Bonjour.
      */
     try {
-        const devices = await findShellyDevicesOnNetwork(
-            input.scanDurationSeconds,
-        );
+        const devices = await findShellyDevicesOnNetwork(scanDurationSeconds);
         if (devices.length === 0) {
             return "No Shelly devices found on the network during the scan.";
         }
@@ -99,11 +99,3 @@ export async function callback(
         return `Failed to perform discovery. Error: ${error.message}`;
     }
 }
-
-/**
- * Default export function for the discover command
- * Scans the local network for Shelly devices using mDNS/Bonjour
- */
-export default async function discover(scanDurationSeconds: number = 5): Promise<string> {
-    return await callback({ scanDurationSeconds });
-} 

@@ -12,13 +12,15 @@ export const name = 'deploy';
 
 export const description = 'Deploy scripts to Shelly devices';
 
-export const inputSchema = z.object({});
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
+    scriptName: z.string().optional().describe('Name of the script to deploy (optional)')
+};
 
-export async function callback(args: {}) {
-    return await deploy();
+export async function callback(args: { scriptName?: string }) {
+    return await deploy(args.scriptName);
 }
 
-export default async function deploy(): Promise<string> {
+export default async function deploy(scriptName?: string): Promise<string> {
     try {
         const config = new SolutionsConfig();
         await config.load();
@@ -27,6 +29,10 @@ export default async function deploy(): Promise<string> {
         const deployedScripts = [];
 
         for (const { solutionName, scriptName, scriptConfig } of scripts) {
+            if (scriptName && scriptName !== scriptName) {
+                continue;
+            }
+
             logger.log(chalk.blue(`Processing ${scriptName} from ${solutionName}...`));
 
             // Check if the built file exists

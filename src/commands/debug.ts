@@ -8,10 +8,10 @@ export const name = 'debug';
 
 export const description = 'Enable or disable debug mode for Shelly script';
 
-export const inputSchema = z.object({
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
     mode: z.enum(['on', 'off']).describe('Debug mode: on or off'),
     scriptName: z.string().optional().describe('Name of the script (optional)')
-});
+};
 
 export async function callback(args: { mode: 'on' | 'off', scriptName?: string }) {
     return await debug(args.mode, args.scriptName);

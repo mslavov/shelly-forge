@@ -8,9 +8,9 @@ export const name = 'logs';
 
 export const description = 'Stream logs from Shelly devices';
 
-export const inputSchema = z.object({
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
     scriptName: z.string().optional().describe('Name of the script to stream logs from (optional)')
-});
+};
 
 export async function callback(args: { scriptName?: string }) {
     return await logs(args.scriptName);
