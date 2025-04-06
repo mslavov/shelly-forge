@@ -5,7 +5,13 @@ import { logger } from "./utils/logger.js";
 import { CURRENT_WORKING_DIRECTORY } from "./utils/cwd.js";
 
 // Initialize FastMCP server
-const mcp = new McpServer({ name: "shelly-forge", version: "0.1.0" });
+const mcp = new McpServer({
+    name: "shelly-forge",
+    version: "0.1.0"
+}, {
+    instructions: `This server is used to execute Shelly Forge commands. 
+It is used to develop, test, and deploy scripts to Shelly smart home devices`
+});
 
 // --- Server Initialization and Run ---
 
