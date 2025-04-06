@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import init from './commands/init';
-import deploy from './commands/deploy';
-import debug from './commands/debug';
-import logs from './commands/logs';
-import create from './commands/create';
-import build from './commands/build';
+import init from './commands/init.js';
+import deploy from './commands/deploy.js';
+import debug from './commands/debug.js';
+import logs from './commands/logs.js';
+import create from './commands/create.js';
+import build from './commands/build.js';
+import mcp from './commands/mcp.js';
 
 const program = new Command();
 
@@ -42,5 +43,10 @@ program
     .action(create);
 
 program.command('build').description('Build all Shelly scripts using esbuild').action(build);
+
+program
+    .command('mcp')
+    .description('Start the Model Context Protocol (MCP) server')
+    .action(mcp);
 
 program.parse(process.argv);

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { SolutionsConfig } from '../solutions-config';
-import { ShellyDevice } from '../shelly-device';
+import { SolutionsConfig } from '../solutions-config.js';
+import { ShellyDevice } from '../shelly-device.js';
 
 export default async function debug(mode: string, scriptName?: string): Promise<void> {
     try {

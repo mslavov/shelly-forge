@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
-import { SolutionsConfig } from '../solutions-config';
+import { SolutionsConfig } from '../solutions-config.js';
 
 export default async function create(name: string, hostname: string, solution = 'default'): Promise<void> {
     try {

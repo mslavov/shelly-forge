@@ -1,9 +1,9 @@
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import { SolutionsConfig } from '../solutions-config';
-import { ShellyDevice } from '../shelly-device';
-import { ScriptHashCache } from '../script-hash-cache';
+import { SolutionsConfig } from '../solutions-config.js';
+import { ShellyDevice } from '../shelly-device.js';
+import { ScriptHashCache } from '../script-hash-cache.js';
 
 export default async function deploy(): Promise<void> {
     try {

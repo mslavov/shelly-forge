@@ -13,3 +13,5 @@ dist/
 # lib
 lib/
 *.tgz
+
+tmp/

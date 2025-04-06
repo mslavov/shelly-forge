@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { spawn } from 'child_process';
-import { SolutionsConfig } from '../solutions-config';
+import { SolutionsConfig } from '../solutions-config.js';
 
 export default async function logs(scriptName?: string): Promise<void> {
     try {

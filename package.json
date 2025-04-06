@@ -1,6 +1,7 @@
 {
     "name": "shelly-forge",
     "version": "0.1.4",
+    "type": "module",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
     "license": "MIT",
@@ -16,11 +17,14 @@
         "clean": "rm -rf dist",
         "prepublishOnly": "npm run clean && npm run build",
         "build": "tsc",
-        "watch": "tsc -w"
+        "watch": "tsc -w",
+        "start": "node dist/shelly-forge.js"
     },
     "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.8.0",
         "@types/node": "^20.0.0",
         "axios": "^1.7.9",
+        "bonjour-service": "^1.3.0",
         "chalk": "^4.1.2",
         "commander": "^8.3.0",
         "dotenv": "^10.0.0",
@@ -29,7 +33,8 @@
         "inquirer": "^8.2.0",
         "nodemon": "^2.0.15",
         "typescript": "^5.0.0",
-        "ws": "^8.2.3"
+        "ws": "^8.2.3",
+        "zod": "^3.24.2"
     },
     "main": "dist/shelly-forge.js",
     "types": "types/index.d.ts",
