@@ -13,3 +13,7 @@ dist/
 # lib
 lib/
 *.tgz
+
+tmp/
+
+.shelly-forge/

@@ -2,8 +2,27 @@ import inquirer from 'inquirer';
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
+import { fileURLToPath } from 'url';
 
-export default async function init(name?: string): Promise<void> {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const name = 'init';
+
+export const description = 'Initialize a new Shelly script project';
+
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {
+    name: z.string().optional().describe('Project name')
+};
+
+export async function callback(args: { name?: string }) {
+    return await init(args.name);
+}
+
+export default async function init(name?: string): Promise<string> {
     let projectName = name;
 
     if (!projectName) {
@@ -20,9 +39,30 @@ export default async function init(name?: string): Promise<void> {
 
     // Copy template files
     const templateDir = path.join(__dirname, '../../templates/default');
-    const targetDir = path.join(process.cwd(), projectName);
+    const targetDir = path.join(CURRENT_WORKING_DIRECTORY, projectName);
 
     await fs.copy(templateDir, targetDir);
+
+    // Create .cursor directory and mcp.json file
+    const cursorDir = path.join(targetDir, '.cursor');
+    await fs.ensureDir(cursorDir);
+
+    const mcpConfig = {
+        "mcpServers": {
+            "shelly-forge": {
+                "command": "npx",
+                "args": [
+                    "shelly-forge",
+                    "mcp"
+                ],
+                "env": {
+                    "CURRENT_WORKING_DIRECTORY": targetDir
+                }
+            }
+        }
+    };
+
+    await fs.writeJson(path.join(cursorDir, 'mcp.json'), mcpConfig, { spaces: 4 });
 
     // Rename gitignore to .gitignore
     const gitignorePath = path.join(targetDir, 'gitignore');
@@ -31,5 +71,6 @@ export default async function init(name?: string): Promise<void> {
         await fs.rename(gitignorePath, dotGitignorePath);
     }
 
-    console.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
+    logger.log(chalk.green(`✨ Created new Shelly script project in ${projectName}`));
+    return `Created new Shelly script project in ${projectName}`;
 }

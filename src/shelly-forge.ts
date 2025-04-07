@@ -1,46 +1,66 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import init from './commands/init';
-import deploy from './commands/deploy';
-import debug from './commands/debug';
-import logs from './commands/logs';
-import create from './commands/create';
-import build from './commands/build';
+import { loadCommandTools } from './load-commands.js';
+import { logger } from './utils/logger.js';
 
 const program = new Command();
-
 program.version('0.1.0');
 
-program
-    .command('init')
-    .description('Initialize a new Shelly script project')
-    .argument('[name]', 'Project name')
-    .action(init);
+async function main() {
+    try {
+        // Load all commands dynamically
+        const commands = await loadCommandTools();
+        logger.debug(`Loaded ${commands.length} commands`);
+        // Register each command with Commander
+        for (const cmd of commands) {
+            const commandObj = program
+                .command(cmd.name)
+                .description(cmd.description);
 
-program.command('deploy').description('Deploy the script to Shelly device').action(deploy);
+            // Add arguments based on inputSchema
+            const schema = cmd.inputSchema;
+            const paramKeys = Object.keys(schema);
 
-program
-    .command('debug')
-    .description('Turn debug mode on/off for a specific script')
-    .argument('<mode>', 'Debug mode: "on" or "off"')
-    .argument('[scriptName]', 'Name of the script (optional)')
-    .action(debug);
+            // Configure arguments based on schema
+            paramKeys.forEach((key, index) => {
+                const param = schema[key];
+                const isOptional = param._def.typeName === 'ZodOptional' ||
+                    param._def.isOptional === true;
+                const description = param._def.description || `Parameter ${index + 1}`;
 
-program
-    .command('logs')
-    .description('Stream logs from a Shelly script')
-    .argument('[scriptName]', 'Name of the script (optional)')
-    .action(logs);
+                // Format: <required> or [optional]
+                const argFormat = isOptional ? `[${key}]` : `<${key}>`;
+                commandObj.argument(argFormat, description);
+            });
 
-program
-    .command('create')
-    .description('Create a new Shelly script')
-    .argument('<name>', 'Name of the script')
-    .argument('<hostname>', 'Hostname/IP of the Shelly device')
-    .argument('[solution]', 'Solution name for organizing scripts')
-    .action(create);
+            // Configure the action handler - wrap to ignore return value
+            commandObj.action(async (...args) => {
+                try {
+                    // Convert arguments array to an object matching the schema
+                    const params: Record<string, any> = {};
+                    paramKeys.forEach((key, index) => {
+                        params[key] = args[index];
+                    });
+                    logger.debug(`Executing ${cmd.name} with args: ${JSON.stringify(params)}`);
 
-program.command('build').description('Build all Shelly scripts using esbuild').action(build);
+                    // Call the command but ignore the return value (Commander expects void)
+                    await cmd.callback(params);
+                } catch (error) {
+                    logger.error(`Error executing ${cmd.name}`, error);
+                    logger.debug(`Error executing ${cmd.name}: ${error}`);
+                    process.exit(1);
+                }
+            });
+        }
 
-program.parse(process.argv);
+        // Parse command line arguments
+        program.parse(process.argv);
+    } catch (error) {
+        logger.error('Failed to initialize commands', error);
+        logger.debug(`Error: ${error}`);
+        process.exit(1);
+    }
+}
+
+main();

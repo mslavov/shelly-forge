@@ -2,20 +2,35 @@ import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
 import esbuild from 'esbuild';
-import { SolutionsConfig } from '../solutions-config';
+import { SolutionsConfig } from '../solutions-config.js';
+import { z } from 'zod';
+import { logger } from '../utils/logger.js';
+import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
 
-export default async function build(): Promise<void> {
+export const name = 'build';
+
+export const description = 'Build all Shelly scripts using esbuild';
+
+export const inputSchema: { [key: string]: z.ZodTypeAny } = {};
+
+export async function callback(args: {}) {
+    return await build();
+}
+
+export default async function build(): Promise<string> {
     try {
         const config = new SolutionsConfig();
         await config.load();
 
-        await fs.ensureDir(path.join(process.cwd(), 'dist'));
+        await fs.ensureDir(path.join(CURRENT_WORKING_DIRECTORY, 'dist'));
 
         const scripts = config.getAllScripts();
-        for (const { solutionName, scriptName, scriptConfig } of scripts) {
-            const scriptPath = path.join(process.cwd(), scriptConfig.src);
+        const builtScripts: string[] = [];
 
-            console.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
+        for (const { solutionName, scriptName, scriptConfig } of scripts) {
+            const scriptPath = path.join(CURRENT_WORKING_DIRECTORY, scriptConfig.src);
+
+            logger.log(chalk.blue(`Building ${scriptName} for solution ${solutionName}...`));
 
             const envVars = Object.entries(process.env)
                 .filter(([key]) => key.startsWith('SHELLY_PUBLIC_'))
@@ -30,7 +45,7 @@ export default async function build(): Promise<void> {
             await esbuild.build({
                 entryPoints: [scriptPath],
                 bundle: true,
-                outfile: path.join(process.cwd(), 'dist', `${solutionName}-${scriptName}.js`),
+                outfile: path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${solutionName}-${scriptName}.js`),
                 format: 'iife',
                 platform: 'browser',
                 minify: true,
@@ -38,16 +53,22 @@ export default async function build(): Promise<void> {
                 define: envVars,
             });
 
-            console.log(chalk.green(`✨ Successfully bundled ${scriptName}`));
+            builtScripts.push(`${solutionName}-${scriptName}`);
+            logger.log(chalk.green(`✨ Successfully bundled ${scriptName}`));
         }
 
         const solutions = config.getSolutions();
+        const solutionSummary: string[] = [];
+
         for (const solutionName of solutions) {
             const devices = config.getDevicesForSolution(solutionName);
-            console.log(chalk.blue(`Solution "${solutionName}" is mapped to devices: ${devices.join(', ')}`));
+            logger.log(chalk.blue(`Solution "${solutionName}" is mapped to devices: ${devices.join(', ')}`));
+            solutionSummary.push(`"${solutionName}" (${devices.length} devices)`);
         }
+
+        return `Successfully built ${builtScripts.length} scripts across ${solutions.length} solutions: ${solutionSummary.join(', ')}`;
     } catch (error) {
-        console.error(chalk.red('Build failed:'), (error as Error).message);
-        process.exit(1);
+        logger.error('Build failed', error);
+        throw error;
     }
 }
