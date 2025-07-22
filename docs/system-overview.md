@@ -1,21 +1,21 @@
-# System Overview - [PROJECT_NAME]
+# System Overview - Shelly Forge
 
-**Last Updated**: [DATE]\
+**Last Updated**: 2025-07-22  
 **Purpose**: Comprehensive system architecture and functionality overview
 
 ---
 
 ## Project Summary
 
-[Brief description of what the project does and its main value proposition]
+Shelly Forge is a TypeScript framework and CLI tool that revolutionizes the development of scripts for Shelly smart home devices. It bridges the gap between modern web development practices and IoT device programming by providing a complete development ecosystem with type safety, real-time debugging, and AI-assisted workflows.
 
 ### Key Capabilities
 
-- **[Core Feature 1]**: [Description]
-- **[Core Feature 2]**: [Description]
-- **[Core Feature 3]**: [Description]
-- **[Core Feature 4]**: [Description]
-- **[Core Feature 5]**: [Description]
+- **TypeScript Development**: Full TypeScript support with complete type definitions for Shelly's API, enabling IntelliSense and compile-time error checking
+- **Live Development Server**: Automatic compilation and deployment with hot reloading for rapid iteration
+- **AI-Assisted Workflow**: Built-in MCP (Model Context Protocol) server for AI-powered device discovery and automated configuration
+- **Real-time Debugging**: Stream device logs and debug information directly to your development console
+- **Project Scaffolding**: CLI tools for quick project setup, script creation, and deployment management
 
 ---
 
@@ -23,35 +23,37 @@
 
 ### Technology Stack
 
-- **Frontend Framework**: [Framework and version]
-- **Styling**: [CSS framework/library]
-- **Authentication**: [Auth solution]
-- **Database**: [Database type and service]
-- **Language**: [Primary programming language]
-- **Package Manager**: [Package manager]
+- **Language**: TypeScript 5.0+
+- **Runtime**: Node.js 20.0+
+- **Build Tool**: ESBuild for fast compilation
+- **Package Manager**: npm
+- **CLI Framework**: Commander.js
+- **Network Discovery**: Bonjour/mDNS service
+- **AI Integration**: Model Context Protocol (MCP) SDK
+- **WebSocket**: ws library for real-time communication
 
 ### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    [PROJECT_NAME]                           │
+│                      Shelly Forge                           │
 ├─────────────────────────────────────────────────────────────┤
-│                       Presentation Layer                    │
+│                       CLI Interface                         │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   [Component1]  │  │   [Component2]  │  │   [Component3]  │ │
-│  │   [Description] │  │   [Description] │  │   [Description] │ │
+│  │  Command Parser │  │   MCP Server    │  │  Dev Server    │ │
+│  │   (Commander)   │  │  (AI Assistant) │  │  (Live Reload) │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 ├─────────────────────────────────────────────────────────────┤
-│                        Business Logic                       │
+│                     Core Services                           │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   [Logic1]      │  │   [Logic2]      │  │   [Logic3]      │ │
-│  │   [Description] │  │   [Description] │  │   [Description] │ │
+│  │ Script Compiler │  │ Device Manager  │  │  Logger/Debug  │ │
+│  │   (ESBuild)     │  │ (Discovery/API) │  │   (Real-time)  │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 ├─────────────────────────────────────────────────────────────┤
-│                         Data Layer                          │
+│                    Device Communication                     │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   [DataSource1] │  │   [DataSource2] │  │   [DataSource3] │ │
-│  │   [Description] │  │   [Description] │  │   [Description] │ │
+│  │  HTTP/REST API  │  │ WebSocket (WS)  │  │  mDNS/Bonjour  │ │
+│  │ (Device Config) │  │  (Live Logs)    │  │  (Discovery)   │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -60,81 +62,95 @@
 
 ## Core Components
 
-### 1. [Component Name 1]
+### 1. CLI Command System
 
-**Location**: [File paths]
+**Location**: `src/shelly-forge.ts`, `src/commands/`
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
+- **Dynamic Command Loading**: Automatically loads all command modules from the commands directory
+- **Commander Integration**: Uses Commander.js for robust CLI argument parsing and help generation
+- **Schema Validation**: Leverages Zod schemas for input validation
+- **Extensible Architecture**: Easy to add new commands by creating modules in the commands directory
 
-### 2. [Component Name 2]
+### 2. MCP Server (AI Assistant)
 
-**Location**: [File paths]
+**Location**: `src/mcp-server.ts`
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
+- **Model Context Protocol**: Implements MCP for seamless AI integration
+- **Tool Registration**: Dynamically registers all CLI commands as MCP tools
+- **Error Handling**: Graceful error handling with formatted responses
+- **StdIO Transport**: Uses standard input/output for communication with AI clients
 
-### 3. [Component Name 3]
+### 3. Device Management
 
-**Location**: [File paths]
+**Location**: `src/shelly-device.ts`, `src/commands/discover.ts`
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
+- **mDNS Discovery**: Automatic discovery of Shelly devices on local network using Bonjour
+- **Device API Client**: HTTP client for interacting with Shelly device REST APIs
+- **Configuration Management**: Handles device-specific configurations and credentials
+- **Real-time Communication**: WebSocket support for live device monitoring
 
-### 4. [Component Name 4]
+### 4. Script Compilation System
 
-**Main Component**: [Main file path]
+**Location**: `src/commands/build.ts`, `src/script-hash-cache.ts`
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
+- **TypeScript to JavaScript**: Compiles TypeScript scripts for Shelly devices
+- **Bundle Generation**: Uses ESBuild to create single-file bundles with IIFE wrapper
+- **Hash Caching**: Intelligent caching system to avoid unnecessary recompilation
+- **Source Maps**: Maintains source maps for debugging compiled scripts
 
 ---
 
 ## Data Flow
 
-### [Process Name] Pipeline
+### Script Development Pipeline
 
-1. **[Step 1]**: [Description]
-2. **[Step 2]**: [Description]
-3. **[Step 3]**: [Description]
-4. **[Step 4]**: [Description]
-5. **[Step 5]**: [Description]
-6. **[Step 6]**: [Description]
+1. **Write TypeScript Code**: Developer writes TypeScript code using Shelly API types
+2. **Compile to JavaScript**: ESBuild compiles and bundles the TypeScript into a single JavaScript file
+3. **Wrap in IIFE**: The compiled code is wrapped in an Immediately Invoked Function Expression
+4. **Deploy to Device**: Script is uploaded to the Shelly device via HTTP API
+5. **Enable Script**: Script is enabled on the device with optional auto-start on boot
+6. **Monitor Execution**: Real-time logs are streamed back via WebSocket connection
 
 ### Data Structures
 
-#### [Data Type 1]
+#### Solution Configuration
 
 ```typescript
-interface [DataType1] {
-  id: string;
-  [field1]: [type];
-  [field2]: [type];
-  [field3]: [type];
-  timestamp: string;
-  // Add more fields as needed
+interface SolutionConfig {
+  [solutionName: string]: {
+    [componentName: string]: {
+      src: string;           // Path to TypeScript source file
+      device: string;        // Device hostname/IP (supports env vars)
+      enableOnBoot: boolean; // Auto-start script on device boot
+    }
+  }
 }
 ```
 
-#### [Data Type 2]
+#### Device Information
 
 ```typescript
-interface [DataType2] {
-  id: string;
-  [field1]: [type];
-  [field2]: [type];
-  [field3]: [type];
-  [field4]: [type];
-  timestamp: string;
-  // Add more fields as needed
+interface DeviceInfo {
+  id: string;              // Unique device identifier
+  model: string;           // Device model (e.g., "SNSW-001X16EU")
+  mac: string;             // MAC address
+  gen: number;             // Device generation (2 or 3)
+  fw_id: string;           // Firmware ID
+  ver: string;             // Firmware version
+  app: string;             // Application name
+  auth_en: boolean;        // Authentication enabled
+  auth_domain: string;     // Authentication domain
+}
+```
+
+#### Script Metadata
+
+```typescript
+interface ScriptInfo {
+  id: number;              // Script ID on device
+  name: string;            // Script name
+  enable: boolean;         // Script enabled status
+  running: boolean;        // Script running status
 }
 ```
 
@@ -144,46 +160,48 @@ interface [DataType2] {
 
 ### ✅ Completed Features
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
-- **[Feature 5]**: [Description]
+- **CLI Framework**: Complete command-line interface with all core commands
+- **TypeScript Support**: Full TypeScript compilation and type definitions
+- **Device Discovery**: mDNS-based automatic device discovery on local network
+- **Script Deployment**: Automated script upload and management
+- **MCP Integration**: AI-assisted development through Model Context Protocol
+- **Live Development**: Real-time compilation and deployment during development
+- **Environment Variables**: Support for environment variables in configuration
 
 ### 🔄 In Progress
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
+- **Enhanced Logging**: Improvements to log filtering and presentation
+- **Unit Testing**: Framework for testing scripts before deployment
+- **Multi-Device Deployment**: Batch operations across multiple devices
 
 ### 📋 Planned Features
 
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
+- **Script Templates**: Pre-built templates for common automation scenarios
+- **Visual Studio Code Extension**: Enhanced IDE integration
+- **Cloud Backup**: Backup and sync scripts across development environments
+- **Script Marketplace**: Community-driven script sharing platform
 
 ---
 
 ## Algorithm Details
 
-### [Algorithm Name 1]
+### Script Compilation Process
 
-The system [description of what the algorithm does] using:
+The compilation system transforms TypeScript into device-compatible JavaScript using:
 
-1. **[Method 1]**: [Description]
-2. **[Method 2]**: [Description]
-3. **[Method 3]**: [Description]
-4. **[Method 4]**: [Description]
+1. **TypeScript Parsing**: Parses TypeScript files and resolves all imports
+2. **Bundle Generation**: ESBuild bundles all dependencies into a single file
+3. **IIFE Wrapping**: Wraps the bundle in an IIFE to prevent global scope pollution
+4. **Size Optimization**: Minifies code while preserving readability for debugging
 
-### [Algorithm Name 2]
+### Device Discovery Algorithm
 
-[Algorithm description] uses:
+The mDNS discovery process identifies Shelly devices using:
 
-1. **[Method 1]**: [Description]
-2. **[Method 2]**: [Description]
-3. **[Method 3]**: [Description]
-4. **[Method 4]**: [Description]
+1. **Service Broadcasting**: Listens for `_shelly._tcp` service announcements
+2. **Device Filtering**: Filters discovered services by Shelly-specific identifiers
+3. **Information Extraction**: Extracts device model, generation, and network details
+4. **Connection Validation**: Verifies device accessibility via HTTP API
 
 ---
 
@@ -191,33 +209,33 @@ The system [description of what the algorithm does] using:
 
 ### Current Limitations
 
-- **[Limitation 1]**: [Description]
-- **[Limitation 2]**: [Description]
-- **[Limitation 3]**: [Description]
-- **[Limitation 4]**: [Description]
+- **Script Size**: Shelly devices have limited memory for scripts (typically 64KB)
+- **Execution Context**: Scripts run in a sandboxed environment with restricted APIs
+- **Network Latency**: Device discovery and deployment depend on network conditions
+- **Concurrent Operations**: Limited concurrent script executions on devices
 
 ### Optimization Strategies
 
-- **[Strategy 1]**: [Description]
-- **[Strategy 2]**: [Description]
-- **[Strategy 3]**: [Description]
-- **[Strategy 4]**: [Description]
+- **Code Minification**: Aggressive minification to fit within size constraints
+- **Lazy Loading**: Load functionality only when needed to reduce memory usage
+- **Batch Operations**: Group multiple API calls to reduce network overhead
+- **Caching**: Cache device information and compiled scripts to improve performance
 
 ---
 
 ## Security & Privacy
 
-### [Security Area 1]
+### Device Security
 
-- **[Security Measure 1]**: [Description]
-- **[Security Measure 2]**: [Description]
-- **[Security Measure 3]**: [Description]
+- **Authentication Support**: Handles device authentication when enabled
+- **Secure Communication**: HTTPS support for encrypted device communication
+- **Credential Management**: Environment variables for secure credential storage
 
-### [Security Area 2]
+### Development Security
 
-- **[Privacy Measure 1]**: [Description]
-- **[Privacy Measure 2]**: [Description]
-- **[Privacy Measure 3]**: [Description]
+- **Local Execution**: All operations run locally, no cloud dependencies
+- **Code Validation**: TypeScript compilation catches potential security issues
+- **Sandboxed Scripts**: Scripts run in isolated device environment
 
 ---
 
@@ -226,22 +244,23 @@ The system [description of what the algorithm does] using:
 ### Code Organization
 
 ```
-[project-name]/
-├── [folder1]/             # [Description]
-├── [folder2]/             # [Description]
-│   ├── [subfolder]/       # [Description]
-│   └── [files]            # [Description]
-├── [folder3]/             # [Description]
-├── [folder4]/             # [Description]
-└── [folder5]/             # [Description]
+shelly-forge/
+├── src/                   # Source code
+│   ├── commands/         # CLI command implementations
+│   ├── utils/            # Utility functions and helpers
+│   └── *.ts             # Core modules
+├── types/                # TypeScript type definitions
+├── templates/            # Project templates
+├── docs/                 # Documentation
+└── dist/                 # Compiled JavaScript output
 ```
 
 ### Key Principles
 
-- **[Principle 1]**: [Description]
-- **[Principle 2]**: [Description]
-- **[Principle 3]**: [Description]
-- **[Principle 4]**: [Description]
+- **Type Safety First**: Always use TypeScript types for Shelly APIs
+- **Modular Design**: Keep scripts focused on single responsibilities
+- **Error Handling**: Implement robust error handling for device communication
+- **Performance Aware**: Consider device memory and processing limitations
 
 ---
 
@@ -250,82 +269,56 @@ The system [description of what the algorithm does] using:
 ### Development Setup
 
 ```bash
+# Install Shelly Forge globally
+npm install -g shelly-forge
+
+# Create new project
+shelly-forge init my-smart-home
+cd my-smart-home
+
 # Install dependencies
-[package-manager] install
+npm install
 
 # Set up environment variables
-cp .env.example .env.local
+cp .env.example .env
+# Edit .env with your device IPs
 
-# Run development server
-[package-manager] dev
+# Start development server
+npm run dev
 ```
 
 ### Production Considerations
 
-- **[Consideration 1]**: [Description]
-- **[Consideration 2]**: [Description]
-- **[Consideration 3]**: [Description]
-- **[Consideration 4]**: [Description]
+- **Device Firmware**: Ensure devices run compatible firmware versions
+- **Network Stability**: Reliable local network for device communication
+- **Script Persistence**: Scripts persist on devices through reboots
+- **Monitoring**: Implement logging for production script monitoring
 
 ---
 
 ## Future Roadmap
 
-### Phase 1: [Phase Name] ([Status])
+### Phase 1: Enhanced Developer Experience (Q1 2025)
 
-- [Status Icon] [Feature 1]
-- [Status Icon] [Feature 2]
-- [Status Icon] [Feature 3]
+- ✅ TypeScript support and compilation
+- ✅ MCP server for AI assistance
+- 🔄 Improved debugging and logging tools
+- 📋 VS Code extension with IntelliSense
 
-### Phase 2: [Phase Name] ([Status])
+### Phase 2: Advanced Features (Q2 2025)
 
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
+- 📋 Script testing framework
+- 📋 Multi-device orchestration
+- 📋 Script performance profiling
+- 📋 Advanced scheduling capabilities
 
-### Phase 3: [Phase Name] ([Status])
+### Phase 3: Community & Ecosystem (Q3 2025)
 
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
-
----
-
-This system overview provides a comprehensive understanding of the
-[PROJECT_NAME]'s architecture, capabilities, and development status. For
-specific implementation details, refer to the individual component documentation
-and code comments.
+- 📋 Script marketplace/repository
+- 📋 Community templates and examples
+- 📋 Plugin system for extensions
+- 📋 Cloud sync and backup
 
 ---
 
-## Template Usage Instructions
-
-**How to use this template:**
-
-1. **Replace all placeholders** in brackets `[PLACEHOLDER]` with your
-   project-specific information
-2. **Update the architecture diagram** to reflect your system's structure
-3. **Customize sections** - add, remove, or modify sections based on your
-   project needs
-4. **Fill in data structures** with your actual interfaces and types
-5. **Update status icons** using: ✅ (completed), 🔄 (in progress), 📋 (planned)
-6. **Maintain consistency** with your project's documentation style
-7. **Keep it updated** as your project evolves
-
-**Key placeholders to replace:**
-
-- `[PROJECT_NAME]` - Your project's name
-- `[DATE]` - Current date
-- `[Component/Feature/etc.]` - Specific components, features, algorithms, etc.
-- `[Description]` - Detailed descriptions of functionality
-- `[File paths]` - Actual file locations in your project
-- `[Status]` - Complete, Planned, Future, etc.
-- `[package-manager]` - npm, yarn, pnpm, etc.
-
-**Optional sections to customize:**
-
-- Add more core components if needed
-- Include additional algorithms or processes
-- Expand security considerations
-- Add deployment-specific information
-- Include monitoring and observability details
+This system overview provides a comprehensive understanding of Shelly Forge's architecture, capabilities, and development status. For specific implementation details, refer to the individual component documentation and API references.

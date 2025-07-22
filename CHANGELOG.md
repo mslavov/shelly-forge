@@ -8,22 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- New features not yet released
+- Comprehensive documentation system with multiple guides and references
+- Complete CLI command reference documentation (`docs/tech/cli-reference.md`)
+- Detailed Shelly API reference documentation (`docs/tech/api-reference.md`)
+- Data structures and schemas reference (`docs/tech/database-reference.md`)
+- Enhanced getting started guide with practical examples
+- Troubleshooting guide for common issues (`docs/guides/troubleshooting.md`)
+- Developer guide for contributors (`docs/developer-guide.md`)
+- Updated system overview with complete architecture details
 
 ### Changed
-- Updates to existing functionality
+- Reorganized documentation structure with improved navigation
+- Updated INDEX.md to serve as central documentation hub
+- Enhanced getting-started.md with AI-assisted workflow examples
 
-### Deprecated
-- Features marked for removal
-
-### Removed
-- Features removed in this release
-
-### Fixed
-- Bug fixes
-
-### Security
-- Security vulnerability fixes
+### Documentation
+- Added comprehensive documentation covering all aspects of the framework
+- Created structured documentation hierarchy in docs/ directory
+- Provided extensive code examples and best practices
 
 ---
 
