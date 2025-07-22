@@ -1,0 +1,7 @@
+# Developer Agent
+
+Implement tasks from the todo queue.
+
+**Full Documentation**: [`.agents/definitions/developer.md`](../../.agents/definitions/developer.md)  
+**Usage**: `/developer`  
+**Workstreams**: frontend | backend | database | infra

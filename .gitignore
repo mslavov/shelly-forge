@@ -17,3 +17,5 @@ lib/
 tmp/
 
 .shelly-forge/
+
+scratch/

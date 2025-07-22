@@ -1,0 +1,6 @@
+# Documentation Agent
+
+Keep documentation synchronized with code.
+
+**Full Documentation**: [`.agents/definitions/docs-agent.md`](../../.agents/definitions/docs-agent.md)  
+**Usage**: `/docs-agent`

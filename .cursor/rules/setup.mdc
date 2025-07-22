@@ -1,0 +1,8 @@
+# Setup Agent
+
+Setup the project.
+
+**Full Documentation**:\
+[`.agents/definitions/setup.md`](../../.agents/definitions/setup.md)
+
+**Usage**: `@setup`

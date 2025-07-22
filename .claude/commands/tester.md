@@ -1,0 +1,6 @@
+# Testing Agent
+
+Validate completed implementations.
+
+**Full Documentation**: [`.agents/definitions/tester.md`](../../.agents/definitions/tester.md)  
+**Usage**: `/tester`
