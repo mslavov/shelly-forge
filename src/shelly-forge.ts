@@ -3,9 +3,10 @@
 import { Command } from 'commander';
 import { loadCommandTools } from './load-commands.js';
 import { logger } from './utils/logger.js';
+import { VERSION } from './version.js';
 
 const program = new Command();
-program.version('0.1.0');
+program.version(VERSION);
 
 async function main() {
     try {

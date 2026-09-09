@@ -3,12 +3,14 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { loadCommandTools } from "./load-commands.js";
 import { logger } from "./utils/logger.js";
 import { CURRENT_WORKING_DIRECTORY } from "./utils/cwd.js";
+import { VERSION } from "./version.js";
 
-// Initialize FastMCP server
-const mcp = new McpServer({
+export const MCP_SERVER_INFO = {
     name: "shelly-forge",
-    version: "0.1.0"
-}, {
+    version: VERSION
+} as const;
+
+const mcp = new McpServer(MCP_SERVER_INFO, {
     instructions: `This server is used to execute Shelly Forge commands. 
 It is used to develop, test, and deploy scripts to Shelly smart home devices`
 });

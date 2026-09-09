@@ -15,7 +15,7 @@
     "dev": "npm run debug:setup && npm run build && npm run dev:concurrent; npm run debug:cleanup"
   },
   "devDependencies": {
-    "shelly-forge": "^0.1.0",
+    "shelly-forge": "^0.2.1",
     "dotenv": "^10.0.0",
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0",

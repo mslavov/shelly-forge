@@ -14,6 +14,7 @@ Shelly devices run Espruino (ES5). TypeScript provides dev-time safety but must 
     platform: 'browser',   // Not Node.js!
     target: 'es5',         // Espruino compatibility
     minify: true,          // Size constraints
+    charset: 'utf8',       // Keep non-ASCII strings valid on Shelly
     keepNames: false,      // Smaller output
     supported: {
         arrow: false       // No arrow functions!

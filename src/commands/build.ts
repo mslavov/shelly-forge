@@ -49,6 +49,7 @@ export default async function build(): Promise<string> {
                 format: 'iife',
                 platform: 'browser',
                 minify: true,
+                charset: 'utf8',
                 supported: { arrow: false },
                 define: envVars,
             });

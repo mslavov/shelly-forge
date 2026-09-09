@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "type": "module",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
@@ -8,15 +8,16 @@
     "homepage": "https://github.com/mslavov/shelly-forge",
     "repository": {
         "type": "git",
-        "url": "https://github.com/mslavov/shelly-forge.git"
+        "url": "git+https://github.com/mslavov/shelly-forge.git"
     },
     "bin": {
-        "shelly-forge": "./dist/shelly-forge.js"
+        "shelly-forge": "dist/shelly-forge.js"
     },
     "scripts": {
         "clean": "rm -rf dist",
         "prepublishOnly": "npm run clean && npm run build",
         "build": "tsc",
+        "test": "npm run build && node --test tests/build.test.mjs",
         "watch": "tsc -w",
         "start": "node dist/shelly-forge.js",
         "mcp-server": "node dist/mcp-server.js"

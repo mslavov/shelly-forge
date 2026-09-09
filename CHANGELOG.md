@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-09
+
 ### Added
 - Comprehensive documentation system with multiple guides and references
 - Complete CLI command reference documentation (`docs/tech/cli-reference.md`)
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reorganized documentation structure with improved navigation
 - Updated INDEX.md to serve as central documentation hub
 - Enhanced getting-started.md with AI-assisted workflow examples
+
+### Fixed
+- Preserve non-ASCII characters as UTF-8 in built Shelly scripts
+- Align CLI, MCP, and generated-project dependency versions with the package release
 
 ### Documentation
 - Added comprehensive documentation covering all aspects of the framework
