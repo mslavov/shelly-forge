@@ -14,13 +14,28 @@
     "dev:concurrent": "concurrently --kill-others-on-fail --handle-input \"npm run watch:ts\" \"npm run watch:upload\" \"npm run watch:logs\"",
     "dev": "npm run debug:setup && npm run build && npm run dev:concurrent; npm run debug:cleanup"
   },
-  "devDependencies": {
+    "devDependencies": {
     "shelly-forge": "^0.2.1",
     "dotenv": "^10.0.0",
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
     "concurrently": "^9.1.2",
-    "nodemon": "^3.1.9",
+        "nodemon": "^3.1.14",
     "wscat": "^6.0.1"
-  }
+    },
+    "overrides": {
+        "axios": "^1.21.0",
+        "esbuild": "0.25.12",
+        "follow-redirects": "^1.16.2",
+        "form-data": "^4.0.6",
+        "inquirer": "^8.2.7",
+        "lodash": "^4.18.1",
+        "nodemon": {
+            ".": "$nodemon",
+            "minimatch": "^11.0.4"
+        },
+        "picomatch": "^2.3.2",
+        "shell-quote": "^1.12.0",
+        "tmp": "^0.2.7"
+    }
 }
