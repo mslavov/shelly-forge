@@ -523,15 +523,58 @@ Follow Semantic Versioning (SemVer):
 - **Minor (0.X.0)**: New features, backward compatible
 - **Patch (0.0.X)**: Bug fixes
 
-### Release Steps
+### Release steps
 
-1. **Update version** in `package.json`
-2. **Update CHANGELOG.md** with release notes
-3. **Run tests**: `npm test`
-4. **Build project**: `npm run build`
-5. **Create git tag**: `git tag v1.2.3`
-6. **Push tag**: `git push origin v1.2.3`
-7. **Publish to npm**: `npm publish`
+1. Update `CHANGELOG.md` with the release notes.
+2. Run `npm version minor --no-git-tag-version`, or use `patch` for a bug-fix release.
+   The version hook updates the generated project's Forge dependency too.
+3. Run `npm ci`, `npm test`, and `npm pack --dry-run`.
+4. Commit the source changes, `package.json`, `package-lock.json`, and the template update.
+5. Merge or push the reviewed commit to `main`.
+
+`.github/workflows/publish.yml` tests pull requests and `main`. On `main`, it checks
+the version against npm and publishes a new stable version with provenance.
+An already published version is skipped. Prereleases, version downgrades, and
+registry errors do not publish. Git tags do not trigger publication.
+
+If publication fails after tests pass, fix the cause and rerun the workflow from
+GitHub Actions or use its manual dispatch on `main`. Do not bump the version merely
+to retry a version that npm has not published.
+
+### npm trusted publisher setup
+
+With npm 12.2.1 and an owner account, log in and configure the publisher:
+
+```bash
+npm login --auth-type=web
+npm trust github shelly-forge --file=publish.yml --repository=mslavov/shelly-forge --allow-publish
+npm trust list shelly-forge
+```
+
+Approve any account-security prompts in the browser. The same configuration can
+be entered in the `shelly-forge` package settings on npm:
+
+| Field | Value |
+|-------|-------|
+| Organization or user | `mslavov` |
+| Repository | `shelly-forge` |
+| Workflow filename | `publish.yml` |
+| Environment | Leave empty |
+| Allowed actions | Enable direct publishing with `npm publish` |
+
+The workflow uses Node 24, npm 12.2.1, and `id-token: write`. It does not need an
+`NPM_TOKEN` secret. npm requires the first publish within two days of creating a
+trusted publisher. If the unused configuration expires, recreate it before the
+first release. See the [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/).
+
+For an interactive CLI login without opening a browser automatically, run:
+
+```bash
+npm login --auth-type=web --browser=false
+```
+
+Open the printed approval URL yourself. This authorizes local npm commands, not
+the GitHub Actions publisher. The package settings above authorize that workflow.
 
 ### Pre-release Testing
 

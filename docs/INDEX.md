@@ -48,6 +48,7 @@ Welcome to the Shelly Forge documentation. This index provides quick access to a
 | **Device Discovery** | [`getting-started.md`](getting-started.md) | AI workflow guide |
 | **Troubleshooting** | [`tech/troubleshooting-guide.md`](tech/troubleshooting-guide.md) | Common issues |
 | **Contributing** | [`tech/developer-guide.md`](tech/developer-guide.md) | Development setup |
+| **Publishing a release** | [`tech/developer-guide.md#release-process`](tech/developer-guide.md#release-process) | Version bumps and npm trusted publishing |
 | **MCP/AI Integration** | [`getting-started.md`](getting-started.md#ai-assisted-workflow) | MCP setup |
 
 ## 📚 Documentation Updates

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
+### Added
+- Build manifests with source and artifact sizes, SHA-256 hashes, and runtime settings.
+- Script selectors for builds and deployments, including `solution/script` and `solution-script`.
+- Configurable on-device names through `targetScriptName` and duplicate device-target validation.
+- GitHub Actions publishing for new stable versions on `main`, using npm trusted publishing.
+
+### Fixed
+- Compile bundled scripts to ES5 before minification.
+- Deploy only the selected script instead of ignoring the selector.
+- Redeploy unchanged code when its target device or on-device name changes.
+- Load `bonjour-service` through its CommonJS exports under Node ESM.
+- Report configured solution names in build summaries.
+
+### Security
+- Update Axios, esbuild, and Inquirer; remove the unused nodemon dependency.
+- Override the vulnerable transitive `follow-redirects` dependency.
+
 ## [0.2.1] - 2026-09-09
 
 ### Added

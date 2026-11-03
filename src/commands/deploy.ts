@@ -13,60 +13,58 @@ export const name = 'deploy';
 export const description = 'Deploy scripts to Shelly devices';
 
 export const inputSchema: { [key: string]: z.ZodTypeAny } = {
-    scriptName: z.string().optional().describe('Name of the script to deploy (optional)')
+    scriptName: z.string().optional().describe('Script selector to deploy (solution/script, solution-script, or unique script name)')
 };
 
 export async function callback(args: { scriptName?: string }) {
     return await deploy(args.scriptName);
 }
 
-export default async function deploy(scriptName?: string): Promise<string> {
+export default async function deploy(scriptSelector?: string): Promise<string> {
     try {
         const config = new SolutionsConfig();
         await config.load();
+        config.validateUniqueDeviceTargets();
 
-        const scripts = config.getAllScripts();
+        const scripts = config.getScripts(scriptSelector);
         const deployedScripts = [];
 
-        for (const { solutionName, scriptName, scriptConfig } of scripts) {
-            if (scriptName && scriptName !== scriptName) {
-                continue;
-            }
-
-            logger.log(chalk.blue(`Processing ${scriptName} from ${solutionName}...`));
+        for (const { scriptConfig, scriptId, artifactName, targetScriptName } of scripts) {
+            logger.log(chalk.blue(`Processing ${scriptId} for on-device script ${targetScriptName}...`));
 
             // Check if the built file exists
-            const builtFilePath = path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${solutionName}-${scriptName}.js`);
+            const builtFilePath = path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${artifactName}.js`);
             if (!(await fs.pathExists(builtFilePath))) {
-                logger.log(chalk.yellow(`Built file not found for ${scriptName}, skipping...`));
+                logger.log(chalk.yellow(`Built file not found for ${scriptId}, skipping...`));
                 continue;
             }
 
             // Read the built JavaScript file
             const code = await fs.readFile(builtFilePath, 'utf8');
+            const cacheKey = JSON.stringify([scriptId, scriptConfig.device, targetScriptName]);
 
             // Check if the code has changed
-            if (!ScriptHashCache.hasChanged(code, `${solutionName}-${scriptName}`)) {
-                logger.log(chalk.yellow(`Script ${scriptName} unchanged, skipping deployment`));
+            if (!ScriptHashCache.hasChanged(code, cacheKey)) {
+                logger.log(chalk.yellow(`Script ${scriptId} unchanged, skipping deployment`));
                 continue;
             }
 
             // Deploy to device
-            logger.log(chalk.blue(`Deploying ${scriptName} to ${scriptConfig.device}...`));
+            logger.log(chalk.blue(`Deploying ${scriptId} as ${targetScriptName} to ${scriptConfig.device}...`));
             const device = new ShellyDevice(scriptConfig.device);
             await device.deploy(
-                scriptName,
+                targetScriptName,
                 code,
                 scriptConfig.enableOnBoot ?? true // Use config value or default to true
             );
 
             // Update hash after successful deployment
-            ScriptHashCache.updateHash(code, `${solutionName}-${scriptName}`);
-            logger.log(chalk.green(`✨ Successfully deployed ${scriptName}`));
-            deployedScripts.push(scriptName);
+            ScriptHashCache.updateHash(code, cacheKey);
+            logger.log(chalk.green(`✨ Successfully deployed ${scriptId}`));
+            deployedScripts.push(scriptId);
 
             if (scriptConfig.enableOnBoot === false) {
-                logger.log(chalk.yellow(`Note: Script ${scriptName} is configured to not start on boot`));
+                logger.log(chalk.yellow(`Note: Script ${scriptId} is configured to not start on boot`));
             }
         }
 

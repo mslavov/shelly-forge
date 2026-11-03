@@ -142,20 +142,28 @@ Build all TypeScript scripts into device-compatible JavaScript.
 
 **Syntax:**
 ```bash
-shelly-forge build
+shelly-forge build [scriptName]
 ```
 
-**Arguments:** None
+**Arguments:**
+- `scriptName` is optional. Use `solution/script`, `solution-script`, or a unique script name.
+  Omitting it builds all configured scripts. Ambiguous or unknown selectors fail.
 
 **What it does:**
 1. Reads all scripts from `solutions.config.json`
-2. Bundles each TypeScript file using esbuild
+2. Bundles each TypeScript file using esbuild, then transpiles the bundle to ES5 with TypeScript
 3. Outputs to `dist/{solution}-{name}.js`
 4. Applies optimizations:
    - Minification for size constraints
    - IIFE wrapping for scope isolation
    - Arrow function transpilation for compatibility
 5. Injects environment variables (SHELLY_PUBLIC_*)
+6. Writes `dist/manifest.json` with the selected scripts, source and artifact sizes,
+   SHA-256 hashes, on-device names, and runtime settings
+
+The final minification pass targets ES5 and preserves UTF-8 text. Configure
+`targetScriptName` on a script to use a different name on the device. Builds and
+deployments reject scripts that share both a device and an on-device name.
 
 **Build Configuration:**
 - **Platform**: Browser
@@ -200,7 +208,9 @@ shelly-forge deploy [scriptName]
 ```
 
 **Arguments:**
-- `scriptName` (optional): Deploy specific script only. If omitted, deploys all changed scripts.
+- `scriptName` is optional. Use `solution/script`, `solution-script`, or a unique script name.
+  If omitted, deploys all changed scripts. Ambiguous or unknown selectors fail before
+  any device request.
 
 **What it does:**
 1. Checks for built scripts in `dist/` directory
@@ -219,6 +229,9 @@ shelly-forge deploy
 
 # Deploy specific script
 shelly-forge deploy temperature-monitor
+
+# Select a script whose name occurs in multiple solutions
+shelly-forge deploy heating/temperature-monitor
 
 # Output:
 # Deploying scripts...

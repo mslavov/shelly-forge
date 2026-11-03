@@ -1,6 +1,12 @@
 import { z } from "zod";
-import { Bonjour } from "bonjour-service";
+import { createRequire } from "module";
 import { logger } from '../utils/logger.js';
+
+// bonjour-service is a CommonJS module; under Node ESM a static named import
+// (`import { Bonjour }`) fails at runtime because cjs-module-lexer can't see the
+// export. Load it through require so the property is resolved off module.exports.
+const require = createRequire(import.meta.url);
+const { Bonjour } = require("bonjour-service") as typeof import("bonjour-service");
 
 // Define expected Shelly service type (Needs verification - common patterns include _http._tcp, _shelly._tcp)
 const SHELLY_SERVICE_TYPE = "http"; // Placeholder - VERIFY THIS!

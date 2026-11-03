@@ -7,6 +7,16 @@ export interface ScriptConfig {
     src: string;
     device: string;
     enableOnBoot?: boolean;
+    targetScriptName?: string;
+}
+
+export interface ConfiguredScript {
+    solutionName: string;
+    scriptName: string;
+    scriptConfig: ScriptConfig;
+    scriptId: string;
+    artifactName: string;
+    targetScriptName: string;
 }
 
 export interface SolutionConfig {
@@ -71,26 +81,74 @@ export class SolutionsConfig {
         await fs.writeJson(this.configPath, this.rawConfig, { spaces: 2 });
     }
 
-    findScript(scriptName: string): { solutionName: string; scriptConfig: ScriptConfig } | undefined {
-        for (const [solutionName, solutionData] of Object.entries(this.config)) {
-            if (scriptName in solutionData) {
-                return {
-                    solutionName,
-                    scriptConfig: solutionData[scriptName],
-                };
-            }
-        }
-        return undefined;
+    private toConfiguredScript(solutionName: string, scriptName: string, scriptConfig: ScriptConfig): ConfiguredScript {
+        return {
+            solutionName,
+            scriptName,
+            scriptConfig,
+            scriptId: `${solutionName}/${scriptName}`,
+            artifactName: `${solutionName}-${scriptName}`,
+            targetScriptName: scriptConfig.targetScriptName || scriptName,
+        };
     }
 
-    getAllScripts(): Array<{ solutionName: string; scriptName: string; scriptConfig: ScriptConfig }> {
-        const scripts: Array<{ solutionName: string; scriptName: string; scriptConfig: ScriptConfig }> = [];
+    private matchesScriptSelector(script: ConfiguredScript, selector: string): boolean {
+        return selector === script.scriptId ||
+            selector === script.artifactName ||
+            selector === script.scriptName ||
+            selector === script.targetScriptName;
+    }
+
+    findScript(selector: string): ConfiguredScript | undefined {
+        const matches = this.getAllScripts().filter((script) => this.matchesScriptSelector(script, selector));
+
+        if (matches.length > 1) {
+            throw new Error(
+                `Script selector "${selector}" is ambiguous. Use one of: ${matches.map((script) => script.scriptId).join(', ')}`
+            );
+        }
+
+        return matches[0];
+    }
+
+    getScripts(selector?: string): ConfiguredScript[] {
+        if (!selector) {
+            return this.getAllScripts();
+        }
+
+        const script = this.findScript(selector);
+        if (!script) {
+            throw new Error(`Script selector "${selector}" not found in solutions.config.json`);
+        }
+
+        return [script];
+    }
+
+    getAllScripts(): ConfiguredScript[] {
+        const scripts: ConfiguredScript[] = [];
         for (const [solutionName, solutionData] of Object.entries(this.config)) {
             for (const [scriptName, scriptConfig] of Object.entries(solutionData)) {
-                scripts.push({ solutionName, scriptName, scriptConfig });
+                scripts.push(this.toConfiguredScript(solutionName, scriptName, scriptConfig));
             }
         }
         return scripts;
+    }
+
+    validateUniqueDeviceTargets(): void {
+        const targets = new Map<string, ConfiguredScript>();
+
+        for (const script of this.getAllScripts()) {
+            const key = `${script.scriptConfig.device}\0${script.targetScriptName}`;
+            const existing = targets.get(key);
+
+            if (existing) {
+                throw new Error(
+                    `Scripts "${existing.scriptId}" and "${script.scriptId}" both target on-device script "${script.targetScriptName}" on ${script.scriptConfig.device}`
+                );
+            }
+
+            targets.set(key, script);
+        }
     }
 
     addScript(solutionName: string, scriptName: string, scriptConfig: ScriptConfig): void {
@@ -129,6 +187,6 @@ export class SolutionsConfig {
     }
 
     getSolutions(): string[] {
-        return Object.keys(this.config.solutions || {});
+        return Object.keys(this.config);
     }
 }

@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "type": "module",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
@@ -17,7 +17,8 @@
         "clean": "rm -rf dist",
         "prepublishOnly": "npm run clean && npm run build",
         "build": "tsc",
-        "test": "npm run build && node --test tests/build.test.mjs",
+        "test": "npm run build && node --test tests/*.test.mjs",
+        "version": "node scripts/sync-template-version.mjs",
         "watch": "tsc -w",
         "start": "node dist/shelly-forge.js",
         "mcp-server": "node dist/mcp-server.js"
