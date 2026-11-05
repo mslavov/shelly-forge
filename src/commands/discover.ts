@@ -1,107 +1,37 @@
-import { z } from "zod";
-import { createRequire } from "module";
-import { logger } from '../utils/logger.js';
+import type { Command } from 'commander';
+import { runAction, type CommandContext, type CommandResult } from '../core/command.js';
+import { ForgeError } from '../core/errors.js';
+import { discoverDevices, type DiscoveredDevice } from '../device/discovery.js';
 
-// bonjour-service is a CommonJS module; under Node ESM a static named import
-// (`import { Bonjour }`) fails at runtime because cjs-module-lexer can't see the
-// export. Load it through require so the property is resolved off module.exports.
-const require = createRequire(import.meta.url);
-const { Bonjour } = require("bonjour-service") as typeof import("bonjour-service");
-
-// Define expected Shelly service type (Needs verification - common patterns include _http._tcp, _shelly._tcp)
-const SHELLY_SERVICE_TYPE = "http"; // Placeholder - VERIFY THIS!
-
-interface DiscoveredDevice {
-    name: string;
-    address: string;
-    port: number;
-    model?: string; // Attempt to get model from TXT records if available
-    id?: string; // Attempt to get ID from TXT records if available
+export interface DiscoverOptions {
+    duration?: number;
 }
 
-export async function findShellyDevicesOnNetwork(
-    scanDurationSeconds: number = 5,
-): Promise<DiscoveredDevice[]> {
-    return new Promise((resolve) => {
-        logger.log(
-            `MCP Discovery: Starting scan for Shelly devices (${scanDurationSeconds}s)...`,
-        );
-        const bonjour = new Bonjour();
-        const discovered: DiscoveredDevice[] = [];
-        const browser = bonjour.find(
-            { type: SHELLY_SERVICE_TYPE },
-            (service) => {
-                // Heuristic check if it's likely a Shelly device based on name/TXT records
-                // Shelly names often contain 'shelly' and the model/ID
-                if (service.name.toLowerCase().includes("shelly")) {
-                    logger.log(
-                        `MCP Discovery: Found potential Shelly: ${service.name} at ${service.addresses[0]
-                        }:${service.port}`,
-                    );
-                    const device: DiscoveredDevice = {
-                        name: service.name,
-                        address: service.addresses[0], // Prefer IPv4
-                        port: service.port,
-                        // TODO: Parse service.txt records for model, id, etc.
-                        model: service.txt?.model || "unknown",
-                        id: service.txt?.id || service.txt?.mac || "unknown",
-                    };
-                    // Avoid duplicates based on address or unique ID from TXT
-                    if (
-                        !discovered.some((d) =>
-                            d.address === device.address ||
-                            (d.id !== "unknown" && d.id === device.id)
-                        )
-                    ) {
-                        discovered.push(device);
-                    }
-                }
-            },
-        );
-
-        // Stop browsing after the specified duration
-        setTimeout(() => {
-            browser.stop();
-            bonjour.destroy();
-            logger.log(
-                `MCP Discovery: Scan finished. Found ${discovered.length} devices.`,
-            );
-            resolve(discovered);
-        }, scanDurationSeconds * 1000);
-    });
+export function register(program: Command): void {
+    program
+        .command('discover')
+        .description('Discover Shelly devices on the network')
+        .option('--duration <seconds>', 'Discovery duration in seconds', Number, 5)
+        .action(async function (this: Command) {
+            await runAction(this, ctx => discover(ctx, this.opts<DiscoverOptions>()));
+        });
 }
 
-
-export const name = "discover";
-
-export const inputSchema: { [key: string]: z.ZodTypeAny } = {
-    scanDurationSeconds: z
-        .number()
-        .int()
-        .min(1)
-        .max(60)
-        .optional()
-        .default(5)
-        .describe("The number of seconds to scan for Shelly devices."),
-};
-
-export const description = "Discover Shelly devices on the network";
-
-export async function callback(
-    { scanDurationSeconds }: { scanDurationSeconds: number },
-): Promise<string> {
-    /**
-     * Scans the local network for Shelly devices using mDNS/Bonjour.
-     */
-    try {
-        const devices = await findShellyDevicesOnNetwork(scanDurationSeconds);
-        if (devices.length === 0) {
-            return "No Shelly devices found on the network during the scan.";
-        }
-        // Format output as JSON string for clarity
-        return JSON.stringify(devices, null, 2);
-    } catch (error: any) {
-        logger.error(`MCP Error: discovering devices`, error);
-        return `Failed to perform discovery. Error: ${error.message}`;
+export async function discover(
+    ctx: CommandContext, options: DiscoverOptions = {}, find: typeof discoverDevices = discoverDevices,
+): Promise<CommandResult<DiscoveredDevice[]>> {
+    const duration = options.duration ?? 5;
+    if (!Number.isInteger(duration) || duration < 1 || duration * 1000 > 2147483647) {
+        throw new ForgeError('USAGE', '--duration must be a positive integer no greater than 2147483 seconds');
     }
+    const devices = await find({ durationMs: duration * 1000, signal: ctx.signal });
+    if (devices.length === 0) return { summary: 'No Shelly devices found.', data: devices };
+    const rows = [
+        ['Name', 'Host', 'Model', 'Gen', 'Firmware', 'Auth'],
+        ...devices.map(device => [device.name, device.host, device.model ?? '-', String(device.gen ?? '-'),
+            device.ver ?? device.fw_id ?? '-', device.authRequired ? 'required' : device.reachable ? 'no' : 'unknown']),
+    ].map(row => row.map(cell => cell.replace(/[\x00-\x1f\x7f]/g, ' ')));
+    const widths = rows[0].map((_, i) => Math.max(...rows.map(row => row[i].length)));
+    const table = rows.map(row => row.map((cell, i) => cell.padEnd(widths[i])).join('  ').trimEnd()).join('\n');
+    return { summary: `Found ${devices.length} Shelly devices.\n${table}`, data: devices };
 }

@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>shelly-forge 0.4.0: design</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --paper: #14161b;
+  --surface: #1c1f26;
+  --ink: #e6e8ee;
+  --muted: #b3bac8;
+  --soft: #8a92a3;
+  --rule: rgba(230, 232, 238, 0.12);
+  --accent: #f0814f;
+  --accent-line: rgba(240, 129, 79, 0.50);
+  --accent-tint: rgba(240, 129, 79, 0.12);
+  --link: #82a8ee;
+  --link-line: rgba(130, 168, 238, 0.45);
+  --link-tint: rgba(130, 168, 238, 0.12);
+  --ok: #73c194;
+  --d-node: #222630;
+  --d-node-line: #9aa2b2;
+  --d-focal: #33241e;
+  --d-store: #262a33;
+  --d-store-line: #7d8698;
+  --d-user: #2b2f39;
+  --d-opt: #1e2128;
+  --d-faint-line: rgba(230, 232, 238, 0.24);
+  --d-arrow: #9aa2b2;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; padding-left: 232px; background: var(--paper); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+main { width: min(1120px, calc(100vw - 232px - 64px)); margin: 0 auto; padding: 48px 0 64px; }
+header { max-width: 960px; margin-bottom: 24px; }
+.eyebrow { margin: 0 0 8px; color: var(--soft); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+h1, h2 { margin: 0; font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; }
+h1 { font-size: 43px; line-height: 1.12; }
+h2 { margin: 40px 0 16px; font-size: 32px; line-height: 1.16; }
+h3 { margin: 24px 0 8px; font-size: 16px; line-height: 1.35; }
+p { margin: 0 0 16px; }
+ul, ol { margin: 0 0 16px; padding-left: 24px; }
+li { margin: 8px 0; }
+a { color: var(--link); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+code { color: var(--ink); font-family: var(--mono); font-size: 0.9em; overflow-wrap: anywhere; }
+pre { margin: 16px 0 24px; padding: 20px; overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; font-size: 13px; line-height: 1.65; }
+pre code { font-size: inherit; overflow-wrap: normal; }
+.subtitle, .lede { max-width: 880px; color: var(--muted); }
+.subtitle { margin-top: 20px; font-size: 17px; }
+nav.toc { position: fixed; top: 0; bottom: 0; left: 0; z-index: 1; width: 232px; padding: 40px 12px 24px 16px; overflow-y: auto; border-right: 1px solid var(--rule); background: var(--paper); }
+nav.toc .eyebrow { margin: 0 0 12px 14px; }
+nav.toc a { display: block; margin: 2px 0; padding: 6px 12px; border-left: 2px solid transparent; color: var(--soft); font-size: 13px; line-height: 1.4; text-decoration: none; }
+nav.toc a:hover { color: var(--ink); border-color: var(--accent); }
+header[id], section[id] { scroll-margin-top: 24px; }
+.summary-grid { display: grid; grid-template-columns: 1.1fr 1fr 0.9fr; gap: 16px; margin: 32px 0 16px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+.card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.card-header h3 { margin: 0; }
+.card-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--muted); }
+.card-dot.coral { background: var(--accent); }
+.card-dot.link { background: var(--link); }
+.card-dot.ok { background: var(--ok); }
+.card p { color: var(--muted); font-size: 14px; }
+.card p:last-child { margin-bottom: 0; }
+.section { margin-top: 48px; padding-top: 8px; border-top: 1px solid var(--rule); }
+figure { margin: 24px 0; min-width: 0; }
+.diagram-shell { overflow-x: auto; }
+figcaption { margin: 12px 0 0; color: var(--soft); font-size: 13px; }
+svg { display: block; width: 100%; min-width: 960px; height: auto; }
+svg.defs { position: absolute; width: 0; height: 0; min-width: 0; overflow: hidden; }
+.note { margin: 24px 0; padding: 16px 20px; border-left: 3px solid var(--link); background: var(--link-tint); border-radius: 0 6px 6px 0; color: var(--muted); font-size: 14px; }
+.table-shell { overflow-x: auto; margin: 16px 0 24px; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--rule); }
+th, td { padding: 12px 16px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; font-size: 14px; }
+th { color: var(--soft); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+td { color: var(--muted); }
+td:first-child { color: var(--ink); }
+tr:last-child td { border-bottom: 0; }
+.rules td:first-child { width: 24%; }
+.severity { white-space: nowrap; }
+.src { color: var(--soft); font-size: 12px; }
+.reading { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 48px; }
+.reading h3 { margin-top: 8px; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--soft); font-family: var(--mono); font-size: 12px; }
+svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.t-name { font-size: 14px; font-weight: 600; fill: var(--ink); }
+.t-sub { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.t-head { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; fill: var(--soft); }
+.t-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; fill: var(--soft); }
+.b-node { fill: var(--d-node); stroke: var(--d-node-line); stroke-width: 1; }
+.b-focal { fill: var(--d-focal); stroke: var(--accent); stroke-width: 1.2; }
+.b-store { fill: var(--d-store); stroke: var(--d-store-line); stroke-width: 1; }
+.b-user { fill: var(--d-user); stroke: var(--link); stroke-width: 1.2; }
+.b-opt { fill: var(--d-opt); stroke: var(--d-faint-line); stroke-width: 1; stroke-dasharray: 4 3; }
+.bg, .mask { fill: var(--paper); }
+.mk { fill: var(--d-arrow); }
+.mk.link { fill: var(--link); }
+.mk.acc { fill: var(--accent); }
+.ln { stroke: var(--d-arrow); stroke-width: 1.2; fill: none; marker-end: url(#m-a); }
+.ln.link { stroke: var(--link); marker-end: url(#m-l); }
+.ln.acc { stroke: var(--accent); marker-end: url(#m-c); }
+.ln.dash { stroke-dasharray: 5 4; }
+@media (max-width: 960px) {
+  body { padding-left: 0; }
+  main { width: calc(100vw - 48px); }
+  nav.toc { position: sticky; bottom: auto; display: flex; gap: 4px; width: auto; padding: 8px 16px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--rule); }
+  nav.toc .eyebrow { display: none; }
+  nav.toc a { flex: 0 0 auto; border-left: 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+  header[id], section[id] { scroll-margin-top: 64px; }
+}
+@media (max-width: 840px) {
+  main { width: calc(100vw - 32px); padding-top: 32px; }
+  .summary-grid, .reading { grid-template-columns: 1fr; }
+  h1 { font-size: 34px; }
+  h2 { font-size: 28px; }
+  th, td { padding: 10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="m-a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" class="mk" /></marker>
+    <marker id="m-l" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" class="mk link" /></marker>
+    <marker id="m-c" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" class="mk acc" /></marker>
+  </defs>
+</svg>
+<nav class="toc" aria-label="Contents">
+  <p class="eyebrow">shelly-forge / 0.4.0</p>
+  <a href="#overview">Overview</a>
+  <a href="#problem">The device is not Node.js</a>
+  <a href="#pipeline">Source to device</a>
+  <a href="#checks">Where failures are caught</a>
+  <a href="#testing">Testing without hardware</a>
+  <a href="#loop">Deploy and debug</a>
+  <a href="#agents">Working with agents</a>
+  <a href="#project">Project and configuration</a>
+  <a href="#reading">Further reading</a>
+</nav>
+<main>
+  <header id="overview">
+    <p class="eyebrow">Design / version 0.4.0</p>
+    <h1>Shelly scripts, checked before upload and verified after start.</h1>
+    <p class="subtitle">shelly-forge builds TypeScript automations for Shelly devices with scripting support, checks their generated JavaScript, provides a local test runtime, and verifies startup after deployment.</p>
+    <p class="lede">The CLI runs on Node.js 22.12 or newer. The automation runs on the device, where JavaScript support and available resources are different. Local checks reduce avoidable failures; the target model and firmware still need testing.</p>
+  </header>
+
+  <section class="summary-grid" aria-label="Design summary">
+    <article class="card">
+      <p class="eyebrow">Develop</p>
+      <div class="card-header"><span class="card-dot coral"></span><h3>Check the code that will run</h3></div>
+      <p>Use the device types, test with a virtual clock, then check the final ES5 artifact. <code>check</code> runs the build pipeline without writing artifacts.</p>
+    </article>
+    <article class="card">
+      <p class="eyebrow">Deploy</p>
+      <div class="card-header"><span class="card-dot ok"></span><h3>Check startup on the device</h3></div>
+      <p>Upload, start, and poll status. On startup or health failure, restore a different saved last-good version when one exists. The failed deployment still returns a nonzero exit code.</p>
+    </article>
+    <article class="card">
+      <p class="eyebrow">Debug</p>
+      <div class="card-header"><span class="card-dot link"></span><h3>Inspect through the CLI</h3></div>
+      <p>Read status and bounded logs, evaluate code in a script, or call device RPC. People and agents use the same commands.</p>
+    </article>
+  </section>
+
+  <section class="section" id="problem">
+    <h2>The device is not Node.js</h2>
+    <p class="lede">Shelly's scripting interpreter has an ES5-era language subset. It does not provide Node.js or browser APIs. Promises, Node timers, and many array methods do not belong in device code. The runtime profile allows 5 timers, 5 event handlers, 5 status handlers, and 5 in-flight RPC calls per script. The upload limit is 65,535 UTF-8 bytes.</p>
+    <p>Transpiling syntax is not enough. A bundle can still call a missing built-in, retain an environment lookup, or create too many timers. An edit, upload, and log-reading loop finds these mistakes late.</p>
+    <div class="table-shell">
+      <table>
+        <thead><tr><th>Before 0.4.0</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr><td>The deploy command skipped missing artifacts and could return "No scripts were deployed" instead of failing.</td><td>Deploy builds by default. <code>--no-build</code> requires an artifact and matching manifest entry; missing or mismatched inputs fail with exit 3.</td></tr>
+          <tr><td>The build command bundled, transpiled, and minified without a TypeScript diagnostic pass or artifact rules.</td><td>Build checks the project types and the final bundle before writing output.</td></tr>
+          <tr><td>The device upload path returned after <code>Script.Start</code>, without polling script health.</td><td>Deploy checks <code>Script.GetStatus</code> after start and keeps a local last-good copy for rollback.</td></tr>
+          <tr><td>Logs launched <code>npm run wscat</code> through a shell. Both branches returned before the error-handler and cleanup code.</td><td>The CLI owns its WebSocket streams. Logs can stop after a duration or a count of matching lines.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src">The previous behavior is visible in the pre-0.4.0 build, deploy, logs, and device-upload implementations. Current limits live in <a href="../src/core/runtime-profile.ts"><code>src/core/runtime-profile.ts</code></a>.</p>
+  </section>
+
+  <section class="section" id="pipeline">
+    <h2>Source to device</h2>
+    <p class="lede">A configured script is one build entry and one named script on a device. Imports become part of its bundle, including shared helpers and workspace dependencies outside the project directory. Build does not need device credentials or resolve device environment references.</p>
+    <figure id="build-figure">
+      <div class="diagram-shell" tabindex="0" role="region" aria-label="Build pipeline diagram, scroll horizontally on smaller screens">
+        <svg viewBox="0 0 1040 252" role="img" aria-labelledby="build-title build-desc">
+          <title id="build-title">The local build pipeline</title>
+          <desc id="build-desc">TypeScript source goes through type checking, an esbuild bundle at target esnext, TypeScript ES5 lowering, and UTF-8 normalization with optional esbuild minification. Artifact rules inspect the unminified ES5 bundle and size rules measure shipped code. Only passing builds write JavaScript and a manifest. Check writes nothing.</desc>
+          <rect width="1040" height="252" class="bg" />
+          <text x="24" y="32" class="t-head">LOCAL / BUILD AND CHECK</text>
+          <path d="M168 124 H194" class="ln" />
+          <path d="M336 124 H362" class="ln" />
+          <path d="M504 124 H530" class="ln" />
+          <path d="M672 124 H698" class="ln" />
+          <path d="M840 124 H866" class="ln acc" />
+          <rect x="24" y="72" width="144" height="112" rx="6" class="b-node" />
+          <text x="96" y="104" class="t-name" text-anchor="middle">TypeScript source</text>
+          <text x="96" y="128" class="t-sub" text-anchor="middle">configured entry</text>
+          <text x="96" y="148" class="t-sub" text-anchor="middle">+ local imports</text>
+          <rect x="192" y="72" width="144" height="112" rx="6" class="b-node" />
+          <text x="264" y="104" class="t-name" text-anchor="middle">Type check</text>
+          <text x="264" y="128" class="t-sub" text-anchor="middle">tsconfig.json</text>
+          <text x="264" y="148" class="t-sub" text-anchor="middle">device type lib</text>
+          <rect x="360" y="72" width="144" height="112" rx="6" class="b-node" />
+          <text x="432" y="104" class="t-name" text-anchor="middle">Bundle</text>
+          <text x="432" y="128" class="t-sub" text-anchor="middle">esnext / IIFE</text>
+          <text x="432" y="148" class="t-sub" text-anchor="middle">public env values</text>
+          <rect x="528" y="72" width="144" height="112" rx="6" class="b-node" />
+          <text x="600" y="104" class="t-name" text-anchor="middle">Lower + minify</text>
+          <text x="600" y="128" class="t-sub" text-anchor="middle">TypeScript / ES5</text>
+          <text x="600" y="148" class="t-sub" text-anchor="middle">UTF-8 / minify</text>
+          <rect x="696" y="72" width="144" height="112" rx="6" class="b-focal" />
+          <text x="768" y="104" class="t-name" text-anchor="middle">Artifact checks</text>
+          <text x="768" y="128" class="t-sub" text-anchor="middle">unminified ES5</text>
+          <text x="768" y="148" class="t-sub" text-anchor="middle">errors stop build</text>
+          <rect x="864" y="72" width="152" height="112" rx="6" class="b-store" />
+          <text x="940" y="104" class="t-name" text-anchor="middle">Write output</text>
+          <text x="940" y="128" class="t-sub" text-anchor="middle">dist/*.js</text>
+          <text x="940" y="148" class="t-sub" text-anchor="middle">manifest.json</text>
+          <text x="24" y="224" class="t-sub">check stops before writing output. --strict makes warnings fail the build or check.</text>
+        </svg>
+      </div>
+      <figcaption>Build checks project types once. With a selector, only diagnostics in selected entries and their imported inputs, plus global and configuration errors, can fail the build. Ignored diagnostic counts appear at debug level. The generated project's <code>tsconfig.json</code> supplies the device library.</figcaption>
+    </figure>
+    <p>esbuild bundles at target <code>esnext</code>, then TypeScript lowers syntax to ES5. TypeScript's <code>__assign</code> and <code>__rest</code> helpers detect missing built-ins; esbuild's earlier lowering used helpers that required <code>Object.getOwnPropertyDescriptors</code>. A final esbuild pass normalizes raw UTF-8 even with <code>--no-minify</code>, which keeps the ES5 bundle readable.</p>
+    <p>The schema 1 manifest records source and artifact sizes and hashes, build settings, findings, and each script's <code>inputs</code> as project-relative paths with SHA-256 hashes. Input paths may contain <code>../</code> for imports outside the project directory, but cannot be absolute or contain backslashes or NUL. Entry source and artifact paths must stay inside the project. The build validates the merged manifest before writing any artifacts. <code>publicEnvSha256</code> hashes sorted public name/value pairs without storing the values. Selected builds merge entries by <code>deployId</code>, retain other configured scripts, and drop removed entries. <code>runtime.bundleTarget</code> is <code>esnext</code>; readers also accept <code>es2015</code>.</p>
+    <p><code>build --no-typecheck</code> and <code>build --no-check</code> bypass separate checks; they are not fixes for reported errors. Neither type checking nor artifact checking executes a test suite. Run <code>npm test</code> separately.</p>
+    <figure id="deploy-figure">
+      <div class="diagram-shell" tabindex="0" role="region" aria-label="Deployment and rollback diagram, scroll horizontally on smaller screens">
+        <svg viewBox="0 0 1040 448" role="img" aria-labelledby="deploy-title deploy-desc">
+          <title id="deploy-title">Deployment, startup verification, and rollback</title>
+          <desc id="deploy-desc">After preflight and a cache check that requires a running script, deployment finds or creates the script, stops it, uploads chunks, configures it, and starts it. Every returned status must be healthy and at least one poll must complete within the verification window before the cache and last-good artifact are recorded. A later deadline-aborted request or late healthy response does not cancel an earlier healthy result. Startup or health failure can re-upload a different saved last-good artifact and verify it. The failed deployment returns exit 5 even after restoration.</desc>
+          <rect width="1040" height="448" class="bg" />
+          <text x="24" y="32" class="t-head">DEVICE / DEPLOY</text>
+          <path d="M256 120 H338" class="ln" />
+          <path d="M684 120 H782" class="ln acc" />
+          <path d="M944 176 V298" class="ln" />
+          <path d="M824 176 V268 H736 V356 H686" class="ln acc dash" />
+          <path d="M616 300 V178" class="ln acc dash" />
+          <rect x="912" y="224" width="64" height="24" class="mask" />
+          <text x="944" y="240" class="t-lbl" text-anchor="middle">PASS</text>
+          <text x="720" y="250" class="t-lbl" text-anchor="middle">STARTUP / HEALTH FAILURE</text>
+          <rect x="580" y="260" width="72" height="24" class="mask" />
+          <text x="616" y="276" class="t-lbl" text-anchor="middle">RETRY</text>
+          <rect x="24" y="64" width="232" height="112" rx="6" class="b-node" />
+          <text x="140" y="96" class="t-name" text-anchor="middle">Preflight + cache</text>
+          <text x="140" y="120" class="t-sub" text-anchor="middle">targets / size / hash</text>
+          <text x="140" y="144" class="t-sub" text-anchor="middle">skip requires running</text>
+          <rect x="340" y="64" width="344" height="112" rx="6" class="b-node" />
+          <text x="512" y="92" class="t-name" text-anchor="middle">Upload and start</text>
+          <text x="512" y="116" class="t-sub" text-anchor="middle">find or create / stop / Script.PutCode</text>
+          <text x="512" y="140" class="t-sub" text-anchor="middle">set name + boot setting / Script.Start</text>
+          <rect x="784" y="64" width="232" height="112" rx="6" class="b-focal" />
+          <text x="900" y="96" class="t-name" text-anchor="middle">Verify startup</text>
+          <text x="900" y="120" class="t-sub" text-anchor="middle">Script.GetStatus</text>
+          <text x="900" y="144" class="t-sub" text-anchor="middle">healthy completed polls</text>
+          <rect x="340" y="300" width="344" height="112" rx="6" class="b-focal" />
+          <text x="512" y="328" class="t-name" text-anchor="middle">Restore last-good code</text>
+          <text x="512" y="352" class="t-sub" text-anchor="middle">only if saved code exists and differs</text>
+          <text x="512" y="376" class="t-sub" text-anchor="middle">re-upload / start / verify again</text>
+          <text x="512" y="396" class="t-sub" text-anchor="middle">original deploy still fails / exit 5</text>
+          <rect x="784" y="300" width="232" height="112" rx="6" class="b-store" />
+          <text x="900" y="328" class="t-name" text-anchor="middle">Record locally</text>
+          <text x="900" y="352" class="t-sub" text-anchor="middle">deploy-cache.json</text>
+          <text x="900" y="376" class="t-sub" text-anchor="middle">last-good JavaScript</text>
+          <text x="24" y="344" class="t-lbl">SOLID: NORMAL PATH</text>
+          <text x="24" y="368" class="t-lbl">DASHED: CONDITIONAL RECOVERY</text>
+        </svg>
+      </div>
+      <figcaption>Upload chunks normally contain 1,024 JavaScript string code units, adjusted to avoid splitting a surrogate pair. The first chunk replaces existing code; later chunks append. An ambiguous <code>DEVICE_UNREACHABLE</code> chunk failure restarts the entire upload with replace mode, at most twice. An explicit RPC rejection does not trigger a restart.</figcaption>
+    </figure>
+    <p>The last <code>Script.PutCode</code> response's numeric <code>len</code> must equal the artifact's UTF-8 byte length. Only when <code>len</code> is absent, the CLI falls back to <code>Script.GetCode {id, offset: 0, len: 1}</code> and adds the sample's byte count to <code>left</code>. A replacement character from a partial multibyte character counts as one sampled byte. An invalid <code>len</code> or a length mismatch fails the upload. The artifact limit is measured in UTF-8 bytes, not string length.</p>
+    <p>Verification polls immediately after start, then waits up to 500 ms between polls across the full 3,000 ms window. At least one healthy poll must complete within the window. Every returned status must report <code>running: true</code> without <code>errors</code> or <code>error_msg</code>, including responses after the deadline. Any unhealthy response fails immediately with those details. After an earlier healthy poll, a later request cut off by the deadline or a late healthy response does not fail verification. Other failed status requests still fail. This checks startup, not behavior after the window.</p>
+    <p><code>deploy</code> and <code>dev</code> accept <code>--verify-timeout &lt;ms&gt;</code> to change the window. The value must be an integer from 1 to 4294967295. Invalid values return <code>USAGE</code>, exit 2, before building or starting a watcher.</p>
+    <p>The first Ctrl+C cancels before stop or after start, not between stop, upload, configuration, and start. It also defers cancellation during rollback's replacement sequence. Cancellation alone therefore does not leave a script stopped. An upload error still can. A second Ctrl+C forces exit 130 and can interrupt any step.</p>
+    <p>The cache is keyed by host and target script name. A skip also requires a matching artifact hash, device script ID, boot setting, and <code>running: true</code>. A skip does not read back device code or repeat the health window. Use <code>status</code> to inspect health and <code>deploy --force</code> to upload again after out-of-band edits. Last-good filenames include 12 hexadecimal characters of the target name's SHA-256 hash so names differing only in case remain distinct on case-insensitive filesystems.</p>
+    <div class="note">An upload failure can leave a stopped, partially written script and returns exit 4. Run deploy again to send the complete artifact. Rollback applies to startup or health failure, not partial upload. <code>--no-verify</code> skips the startup check and does not save a new cache entry or last-good copy. <code>--no-rollback</code> disables restoration.</div>
+    <p><code>deploy --dry-run</code> builds by default and reports create, update, or skip plans. Its device requests are limited to <code>Script.List</code>. It does not upload, start a script, or prove that a deployment would run.</p>
+    <p><code>deploy --no-build</code> validates the artifact, entry source, imported inputs, and public environment hashes against the manifest. Missing or changed inputs report their path. Older manifests without input or public environment hashes require rebuilding. Prefer the default build-then-deploy path.</p>
+    <p>Deployment reuses an authenticated RPC client only for the same normalized host and password during upload, verification, and rollback. Entries with different passwords do not share a client. HTTP 429 waits 2,000 ms before retrying, at most twice. Malformed responses include their HTTP status; HTTP 404 adds a hint to check for a Gen2+ device or the wrong host.</p>
+    <p class="src">Implementation: <a href="../src/build/build-project.ts">build pipeline</a>, <a href="../src/build/manifest.ts">manifest validation</a>, <a href="../src/deploy/deployer.ts">deployer</a>, <a href="../src/device/scripts.ts">script RPC operations</a>.</p>
+  </section>
+
+  <section class="section" id="checks">
+    <h2>Where failures are caught</h2>
+    <div class="table-shell">
+      <table>
+        <thead><tr><th>Check</th><th>What it can catch</th><th>What it does not prove</th></tr></thead>
+        <tbody>
+          <tr><td>Editor and project type check</td><td>Invalid types, missing declared APIs, and unsupported array methods when using the device library.</td><td>Types do not measure resource use or execute callbacks.</td></tr>
+          <tr><td>Artifact checks</td><td>Known hazards left in the final JavaScript, including unsupported free globals and oversized code.</td><td>Rules are not a complete implementation of the device interpreter. Some checks are heuristics.</td></tr>
+          <tr><td>Simulator tests</td><td>Behavior under supplied inputs, virtual time, RPC outcomes, and enforced resource limits.</td><td>The simulator is Node's VM, not device firmware. It does not reproduce CPU, memory, or radio behavior.</td></tr>
+          <tr><td>Deploy verification</td><td>A newly started script that is not running or reports errors during the verification window.</td><td>A healthy window does not prove long-running correctness. Cached skips do not repeat this check.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Rules on the ES5 bundle</h3>
+    <p>AST rules inspect the unminified ES5 bundle, equal to <code>build --no-minify</code> output. Finding line and column numbers refer to that bundle, even when shipped code is minified. For minified builds and <code>check</code>, text locations include <code>(unminified)</code> and JSON artifact findings include <code>bundle: "unminified"</code>. <code>build --no-minify</code> writes the matching file and omits that marker. AST messages include a short code excerpt because <code>check</code> writes no artifact. Size rules measure shipped code. The default severities below come from <a href="../src/build/artifact-check.ts"><code>artifact-check.ts</code></a>. <code>--strict</code> promotes warnings to errors.</p>
+    <div class="table-shell">
+      <table class="rules">
+        <thead><tr><th>Rule ID</th><th>Severity</th><th>Reported condition</th></tr></thead>
+        <tbody>
+          <tr><td><code>size-limit</code></td><td class="severity">Error</td><td>More than 65,535 UTF-8 bytes.</td></tr>
+          <tr><td><code>size-budget</code></td><td class="severity">Warning</td><td>Above 80% of the size limit, without exceeding the limit.</td></tr>
+          <tr><td><code>unresolved-env</code></td><td class="severity">Error</td><td>A remaining <code>process.env</code> lookup. Only set <code>SHELLY_PUBLIC_*</code> values are inlined at build time.</td></tr>
+          <tr><td><code>unsupported-global</code></td><td class="severity">Error or warning</td><td>Free references to <code>Promise</code>, Node timers, <code>setImmediate</code>, <code>queueMicrotask</code>, <code>fetch</code>, <code>XMLHttpRequest</code>, <code>require</code>, or <code>process</code> are errors. <code>Symbol</code>, <code>Proxy</code>, <code>Reflect</code>, <code>WeakMap</code>, and <code>WeakSet</code> are warnings. Local bindings are excluded.</td></tr>
+          <tr><td><code>async-function</code></td><td class="severity">Error</td><td>TypeScript <code>__awaiter</code> or <code>__generator</code> helpers.</td></tr>
+          <tr><td><code>dynamic-code</code></td><td class="severity">Error</td><td>Free <code>eval</code> references or calls and construction through the global <code>Function</code>.</td></tr>
+          <tr><td><code>use-before-declaration</code></td><td class="severity">Error</td><td>A reference evaluated before its function declaration in the same execution scope, including a callback passed to <code>Timer.set</code>. References inside a nested function body are allowed.</td></tr>
+          <tr><td><code>unicode-escape</code></td><td class="severity">Error</td><td>A <code>\u</code> escape in string literal source. Use raw UTF-8 characters instead; a literal escaped backslash is allowed.</td></tr>
+          <tr><td><code>unsupported-array-method</code></td><td class="severity">Warning</td><td>Callback-taking <code>map</code>, <code>forEach</code>, <code>filter</code>, <code>reduce</code>, <code>reduceRight</code>, <code>some</code>, <code>every</code>, <code>find</code>, <code>findIndex</code>, or <code>flatMap</code> calls with a function or identifier as the first argument. Free <code>Object</code>, <code>JSON</code>, <code>Math</code>, <code>String</code>, <code>Number</code>, and <code>Array</code> receivers and declared object methods are excluded. Non-callback methods rely on the type checker.</td></tr>
+          <tr><td><code>class-inheritance</code></td><td class="severity">Error or warning</td><td><code>class X extends Y</code> fails because TypeScript's ES5 output relies on function hoisting. Use composition or plain objects. Other <code>__extends</code> and <code>Object.setPrototypeOf</code> findings remain warnings.</td></tr>
+          <tr><td><code>callback-nesting</code></td><td class="severity">Warning</td><td>Function expressions passed as call arguments nested deeper than two levels. The top-level IIFE is not counted.</td></tr>
+          <tr><td><code>non-ascii</code></td><td class="severity">Warning</td><td>Non-ASCII characters in string literals. Device string indexing and length operate on bytes.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Type diagnostics use the <code>typescript</code> rule; bundling failures use <code>bundle</code>. A missing <code>tsconfig.json</code> produces a <code>missing-tsconfig</code> warning and skips type checking. In strict mode, that warning fails the check.</p>
+  </section>
+
+  <section class="section" id="testing">
+    <h2>Testing without hardware</h2>
+    <p class="lede"><code>shelly-forge/testing</code> executes bundled code in a Node VM with simulated device APIs. Tests control time and inputs instead of waiting for timers or contacting a device.</p>
+    <figure id="simulator-figure">
+      <div class="diagram-shell" tabindex="0" role="region" aria-label="Simulator architecture diagram, scroll horizontally on smaller screens">
+        <svg viewBox="0 0 1040 440" role="img" aria-labelledby="sim-title sim-desc">
+          <title id="sim-title">The simulator and the test process</title>
+          <desc id="sim-desc">A Vitest test loads source or an artifact into a Node VM. The bundle uses simulated Shelly, KVS, Timer, MQTT, HTTP, and BLE APIs. A virtual clock orders timers and deferred RPC callbacks. The runtime profile removes unsupported built-ins and enforces resource limits. Tests inspect calls, logs, KVS values, and published messages.</desc>
+          <rect width="1040" height="440" class="bg" />
+          <rect x="304" y="48" width="712" height="356" rx="8" class="b-opt" />
+          <text x="328" y="76" class="t-head">NODE:VM / SIMULATED DEVICE</text>
+          <path d="M260 148 H338" class="ln link" />
+          <path d="M656 176 V196 H436 V218" class="ln" />
+          <path d="M656 196 V218" class="ln" />
+          <path d="M656 196 H884 V218" class="ln" />
+          <path d="M340 268 H280 V320 H262" class="ln link" />
+          <rect x="24" y="92" width="236" height="112" rx="6" class="b-user" />
+          <text x="142" y="124" class="t-name" text-anchor="middle">Vitest test</text>
+          <text x="142" y="148" class="t-sub" text-anchor="middle">loadScript / loadArtifact</text>
+          <text x="142" y="172" class="t-sub" text-anchor="middle">advance / inject inputs</text>
+          <rect x="24" y="268" width="236" height="112" rx="6" class="b-store" />
+          <text x="142" y="300" class="t-name" text-anchor="middle">Assertions</text>
+          <text x="142" y="324" class="t-sub" text-anchor="middle">calls / logs / KVS</text>
+          <text x="142" y="348" class="t-sub" text-anchor="middle">mqtt.published</text>
+          <rect x="340" y="104" width="640" height="72" rx="6" class="b-focal" />
+          <text x="660" y="132" class="t-name" text-anchor="middle">Your bundled JavaScript</text>
+          <text x="660" y="156" class="t-sub" text-anchor="middle">loadScript bundles without minification / loadArtifact reads a built file</text>
+          <rect x="340" y="220" width="192" height="84" rx="6" class="b-node" />
+          <text x="436" y="248" class="t-name" text-anchor="middle">Shelly + KVS</text>
+          <text x="436" y="272" class="t-sub" text-anchor="middle">RPC / component state</text>
+          <text x="436" y="292" class="t-sub" text-anchor="middle">events / handlers</text>
+          <rect x="556" y="220" width="200" height="84" rx="6" class="b-node" />
+          <text x="656" y="248" class="t-name" text-anchor="middle">Virtual clock + Timer</text>
+          <text x="656" y="272" class="t-sub" text-anchor="middle">ordered timers</text>
+          <text x="656" y="292" class="t-sub" text-anchor="middle">deferred RPC callbacks</text>
+          <rect x="780" y="220" width="200" height="84" rx="6" class="b-node" />
+          <text x="880" y="248" class="t-name" text-anchor="middle">MQTT / HTTP / BLE</text>
+          <text x="880" y="272" class="t-sub" text-anchor="middle">injected messages</text>
+          <text x="880" y="292" class="t-sub" text-anchor="middle">requests / adverts</text>
+          <rect x="340" y="336" width="640" height="44" rx="6" class="b-store" />
+          <text x="660" y="364" class="t-sub" text-anchor="middle">Runtime profile / unsupported built-ins removed / resource limits enforced</text>
+        </svg>
+      </div>
+      <figcaption><code>advance(ms)</code> runs due timers in order and delivers pending RPC callbacks before and between timer steps. <code>flush()</code> delivers pending RPC callbacks without advancing time. The first uncaught script failure throws <code>ShellyScriptError</code>, sets <code>runtime.crashed</code>, and stops the runtime.</figcaption>
+    </figure>
+    <h3>Test the generated example</h3>
+    <p>This test belongs beside the generated <code>src/example/hello.ts</code>. That script increments <code>example.hello.count</code> once per minute. The host test may use async functions; the device script uses named callbacks.</p>
+    <pre><code id="test-example">import { fileURLToPath } from 'node:url';
+import { expect, test } from 'vitest';
+import { createShellyRuntime } from 'shelly-forge/testing';
+
+const scriptPath = fileURLToPath(new URL('./hello.ts', import.meta.url));
+
+test('persists the first counter value', async () =&gt; {
+  const runtime = createShellyRuntime();
+  await runtime.loadScript(scriptPath, {
+    env: { SHELLY_PUBLIC_GREETING: 'Hello' },
+  });
+
+  runtime.advance(60000);
+
+  expect(runtime.kvs.get('example.hello.count')).toBe('1');
+  expect(runtime.logs).toEqual(['Hello example/hello 1']);
+});</code></pre>
+    <p>Tests can set component status, emit events, inject MQTT messages, call HTTP endpoints, and supply RPC handlers. The default strict mode removes unsupported globals and array methods from the VM, not from the host test process. It also removes undeclared modern APIs such as <code>String.prototype.startsWith</code>, <code>padStart</code>, <code>Object.assign</code>, <code>Object.entries</code>, <code>Array.from</code>, <code>Number.isInteger</code>, and newer Math methods. TypeScript's feature-detecting helpers still work. <code>strictBuiltins: false</code> retains those native APIs for test convenience.</p>
+    <p>In both modes, <code>String.prototype.at</code> returns a numeric character code or <code>undefined</code> outside the string. It uses Node's character indexing, not the device's UTF-8 byte indexing.</p>
+    <p>An uncaught top-level or callback error clears timers, pending RPC work, event/status handlers, MQTT subscriptions, HTTP endpoints, and BLE activity. Later <code>advance()</code> and <code>flush()</code> do nothing, including no clock advancement. Calls, logs, completed KVS writes, and published messages remain inspectable. Loading again throws the same stored error; create a new runtime to restart. A caught script error does not crash the runtime.</p>
+    <p>Host calls to <code>setStatus</code> and <code>emitEvent</code> copy their input before entering the script. Inputs that JSON cannot serialize, such as circular references or <code>BigInt</code>, throw <code>TypeError</code> to the caller without crashing the runtime, changing state, invoking handlers, or clearing queued work. Errors inside script handlers still crash the runtime.</p>
+    <p>The simulator enforces 5 timers, 5 event handlers, 5 status handlers, 5 pending RPC calls, 10 MQTT subscriptions, and 5 HTTP endpoints. KVS allows 50 keys, with at most 42 UTF-8 bytes per key and 253 bytes per value. Non-string values use their serialized JSON size.</p>
+    <div class="note">The simulator is not a security boundary for untrusted scripts. Unhandled RPC methods return error <code>-114</code> with <code>method not simulated: &lt;name&gt;</code>; supply a handler when a test needs them. BLE GAP parsing is not simulated, HTTP responses must be sent synchronously, and virtual component handles return <code>null</code>. Node's string behavior and execution engine are not the device interpreter.</div>
+    <p>Read the <a href="../skills/shelly-forge/reference/testing.md">testing guide</a> for fixtures and RPC failure examples. To test the exact minified output, build first and load its file with <code>loadArtifact</code>.</p>
+  </section>
+
+  <section class="section" id="loop">
+    <h2>Deploy and debug</h2>
+    <p class="lede">Use <code>dev &lt;selector&gt;</code> for an interactive edit loop. It watches <code>src/</code>, <code>solutions.config.json</code>, <code>tsconfig.json</code>, and <code>.env</code>. It debounces changes for 300 ms and serializes builds and deployments.</p>
+    <figure id="debug-figure">
+      <div class="diagram-shell" tabindex="0" role="region" aria-label="Device development and inspection diagram, scroll horizontally on smaller screens">
+        <svg viewBox="0 0 1040 408" role="img" aria-labelledby="loop-title loop-desc">
+          <title id="loop-title">Commands around a running device</title>
+          <desc id="loop-desc">Dev builds and deploys edited code to a Shelly device. Logs receives the device-wide debug WebSocket stream, while debug toggles that setting. Status reads script health and resource metrics. Eval executes code in a running script, and rpc calls a device method.</desc>
+          <rect width="1040" height="408" class="bg" />
+          <text x="24" y="32" class="t-head">INTERACTIVE DEVELOPMENT AND EXPLICIT INSPECTION</text>
+          <path d="M288 120 H328 V172 H374" class="ln acc" />
+          <path d="M664 172 H712 V120 H750" class="ln link" />
+          <path d="M752 300 H712 V248 H666" class="ln link" />
+          <path d="M288 300 H328 V248 H374" class="ln link" />
+          <rect x="24" y="72" width="264" height="104" rx="6" class="b-focal" />
+          <text x="156" y="104" class="t-name" text-anchor="middle">Edit and deploy</text>
+          <text x="156" y="128" class="t-sub" text-anchor="middle">dev example/hello</text>
+          <text x="156" y="152" class="t-sub" text-anchor="middle">watch / build / verify</text>
+          <rect x="376" y="140" width="288" height="144" rx="6" class="b-node" />
+          <text x="520" y="172" class="t-name" text-anchor="middle">Shelly device</text>
+          <text x="520" y="200" class="t-sub" text-anchor="middle">named script / component state</text>
+          <text x="520" y="224" class="t-sub" text-anchor="middle">HTTP RPC / debug WebSocket</text>
+          <text x="520" y="252" class="t-sub" text-anchor="middle">target model + firmware</text>
+          <rect x="752" y="72" width="264" height="104" rx="6" class="b-user" />
+          <text x="884" y="104" class="t-name" text-anchor="middle">Read device logs</text>
+          <text x="884" y="128" class="t-sub" text-anchor="middle">logs / debug on|off</text>
+          <text x="884" y="152" class="t-sub" text-anchor="middle">ws://host/debug/log</text>
+          <rect x="752" y="248" width="264" height="112" rx="6" class="b-user" />
+          <text x="884" y="280" class="t-name" text-anchor="middle">Inspect script health</text>
+          <text x="884" y="304" class="t-sub" text-anchor="middle">status example/hello</text>
+          <text x="884" y="328" class="t-sub" text-anchor="middle">running / errors / memory / CPU</text>
+          <rect x="24" y="248" width="264" height="112" rx="6" class="b-user" />
+          <text x="156" y="280" class="t-name" text-anchor="middle">Inspect or change state</text>
+          <text x="156" y="304" class="t-sub" text-anchor="middle">eval / Script.Eval</text>
+          <text x="156" y="328" class="t-sub" text-anchor="middle">rpc / device methods</text>
+        </svg>
+      </div>
+      <figcaption><code>dev</code> reuses the build and deploy code. A build or check failure prevents that cycle's deployment. A newer edit observed during a build supersedes that build; failures are reported and the watcher continues.</figcaption>
+    </figure>
+    <p>Dev enables debug logging, including with <code>--no-logs</code>. On Ctrl+C it closes watchers and streams and turns debug off only on devices where it enabled it. <code>--keep-debug</code> preserves that setting. Standalone <code>logs</code> enables debug by default and leaves it enabled; use <code>--no-enable-debug</code> to avoid that change.</p>
+    <p>The first log connection failure per device outage emits a warning with its DNS, refusal, HTTP, or close reason. Repeats in the same outage use debug-level diagnostics. A successful connection resets warning suppression, so a later outage warns again. When a WebSocket upgrade returns a digest challenge, the stream reuses that header instead of making another request; it fetches a challenge only when the header is missing.</p>
+    <pre><code>npx shelly-forge --json status example/hello
+npx shelly-forge --json logs example/hello --duration 15 --lines 100
+npx shelly-forge --json eval example/hello 'Shelly.getUptimeMs()'
+npx shelly-forge --json rpc Shelly.GetDeviceInfo --script example/hello</code></pre>
+    <p>Logs are device-wide. A selector chooses the device and output label, not a server-side script filter. <code>--grep &lt;pattern&gt;</code> filters message text with a regular expression; <code>--lines</code> counts matching lines. <code>eval</code> and <code>rpc</code> can change device state, depending on the supplied code or method.</p>
+    <h3>Exit codes are part of the interface</h3>
+    <div class="table-shell">
+      <table>
+        <thead><tr><th>Exit</th><th>Error codes or result</th><th>Next step</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>The command completed with no reported failure.</td><td>Read the result. Dry-runs, cache skips, and explicitly unverified deployments are not health proofs.</td></tr>
+          <tr><td>1</td><td><code>INTERNAL</code>, <code>NOT_IMPLEMENTED</code>, or no CLI arguments.</td><td>Inspect the message and use <code>--verbose</code> for error details. No arguments prints help to stderr; explicit <code>--help</code> prints to stdout and exits 0.</td></tr>
+          <tr><td>2</td><td><code>USAGE</code>, <code>CONFIG</code></td><td>Fix arguments, selectors, config, or required environment values.</td></tr>
+          <tr><td>3</td><td><code>BUILD</code>, <code>CHECK</code></td><td>Fix diagnostics or regenerate the artifact and manifest.</td></tr>
+          <tr><td>4</td><td><code>DEVICE_UNREACHABLE</code>, <code>DEVICE_AUTH</code>, <code>DEVICE_RPC</code>, <code>DEPLOY</code></td><td>Check the host, credentials, and RPC error. Retry a partial upload with deploy.</td></tr>
+          <tr><td>5</td><td><code>UNHEALTHY</code>; status can also return 5 with result data.</td><td>Inspect status and bounded logs. Read whether rollback succeeded.</td></tr>
+          <tr><td>130</td><td>A second SIGINT forces the process to exit.</td><td>Inspect the device if deployment was interrupted.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Status returns 5 for a missing script or reported runtime errors, and 4 for a device request error. A stopped script without reported errors does not by itself make status fail. In a long-running dev session, failed cycles are events; do not rely only on the final process exit code.</p>
+    <p class="src">Implementation: <a href="../src/core/errors.ts">error codes</a>, <a href="../src/commands/dev.ts">dev</a>, <a href="../src/commands/status.ts">status</a>, <a href="../src/commands/logs.ts">logs</a>.</p>
+  </section>
+
+  <section class="section" id="agents">
+    <h2>Working with agents</h2>
+    <p class="lede">The agent workflow uses packaged skills and the same CLI that a person runs. The MCP server was removed in 0.4.0. Skills carry the device rules and workflow examples; the CLI executes commands and reports results.</p>
+    <p><a href="../skills/shelly-scripting/SKILL.md">shelly-scripting</a> covers device code. <a href="../skills/shelly-forge/SKILL.md">shelly-forge</a> covers testing, deployment, and debugging. Keeping these instructions with the package makes them available in an initialized project without a separate server.</p>
+    <ul>
+      <li><code>init &lt;name&gt;</code> copies the template, including <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and installs bundled skills unless <code>--no-skills</code> is set. Non-interactive use requires a project name.</li>
+      <li><code>skills install</code> copies skills to <code>.agents/skills/</code> and stamps each with the package version. It creates relative <code>.claude/skills/</code> symlinks, with a copy fallback if symlinks fail. It does not create <code>AGENTS.md</code> in an existing project.</li>
+      <li>Unstamped, user-owned skill directories are preserved unless <code>--force</code> is explicit. Managed installations at a different version are replaced; same-version installations are skipped by default.</li>
+    </ul>
+    <h3>Machine-readable does not mean unattended mutation</h3>
+    <p><code>--json</code> puts result envelopes on stdout. <code>logs</code> and <code>dev</code> emit newline-delimited JSON events before their final envelope. Progress uses stderr. Every result envelope includes <code>exitCode</code>, and <code>ok</code> is true only when it is 0. Thrown failures include an error object with a code and message; optional hint and details fields add context.</p>
+    <p>Always check the process exit code as well as the data. Status can return result data with <code>ok: false</code> and <code>exitCode: 4</code> or <code>5</code>, without an error object.</p>
+    <p>Use bounded logs in non-interactive work, not a persistent dev process. Confirm the intended device before deploy, debug changes, or state-changing eval and RPC calls. The generated project's <code>AGENTS.md</code> asks for that confirmation; the CLI does not enforce an approval prompt.</p>
+    <p class="src">Installer: <a href="../src/scaffold/skills.ts"><code>skills.ts</code></a>. Output contract: <a href="../src/core/command.ts"><code>command.ts</code></a>. Command reference: <a href="../skills/shelly-forge/reference/cli.md">CLI guide</a>.</p>
+  </section>
+
+  <section class="section" id="project">
+    <h2>Project and configuration</h2>
+    <p class="lede">The generated project separates device code from Node.js tests. <code>create &lt;solution&gt; &lt;script&gt;</code> adds both files and a config entry. It refuses to replace existing files.</p>
+    <pre><code>src/example/hello.ts         Device automation
+src/example/hello.test.ts    Vitest test in Node.js
+solutions.config.json       Entries and device targets
+tsconfig.json               Device types, no default library
+tsconfig.test.json          Node.js types for tests
+.env                        Local values, ignored by Git
+.agents/skills/             Installed agent instructions
+AGENTS.md                   Generated project guide
+dist/                       Built JavaScript and manifest
+.shelly-forge/               Logs, deploy cache, last-good copies</code></pre>
+    <p><code>tsconfig.json</code> uses <code>noLib: true</code> and <code>types: []</code>, includes the two packaged device declaration files, and excludes test files. <code>tsconfig.test.json</code> uses ES2022 and Node.js types. Both set <code>moduleDetection: "force"</code>, so scripts can share top-level names without an empty export. Project-wide interface extensions use <code>declare global</code>. The template's <code>npm run typecheck</code> checks both configurations.</p>
+    <pre><code>{
+  "$schema": "./node_modules/shelly-forge/schema/solutions.config.schema.json",
+  "example": {
+    "hello": {
+      "src": "src/example/hello.ts",
+      "device": "${DEVICE_HOSTNAME}",
+      "enableOnBoot": true
+    }
+  }
+}</code></pre>
+    <p>The canonical selector is <code>example/hello</code>. <code>example-hello</code>, a unique script name, or a unique <code>targetScriptName</code> also works. Ambiguous selectors fail and list the matching IDs. The device name defaults to the script name; <code>targetScriptName</code> overrides it. <code>deploy</code> and <code>dev</code> reject duplicate host and target-name pairs involving the selection.</p>
+    <p>The CLI loads <code>.env</code> from the project directory without overriding existing environment values. <code>--cwd &lt;dir&gt;</code> sets that directory. Copy <code>.env.example</code> before the first build; the example expects <code>SHELLY_PUBLIC_GREETING</code> to be set.</p>
+    <ul>
+      <li><code>${NAME}</code> in a device or password config field resolves when a device command needs it. <code>deploy</code> and each <code>dev</code> cycle resolve selected entries strictly. A missing or empty reference in a selected entry is a config error. Unresolved unselected entries do not block either command, but other resolvable entries still participate in duplicate-target checks.</li>
+      <li>Only set <code>process.env.SHELLY_PUBLIC_*</code> values enter the bundle. They are public in the generated JavaScript. An empty greeting uses the example's fallback; an unset greeting remains unresolved and fails artifact checks.</li>
+      <li>A script's <code>password</code> field takes precedence over <code>SHELLY_PASSWORD</code>. Neither should use the public prefix. Authentication uses the <code>admin</code> username.</li>
+    </ul>
+    <p>The deploy cache and last-good files live in this project, not on a remote service. Removing them loses the local skip and recovery history. The CLI cannot restore a previous version it has never saved.</p>
+    <p>See the <a href="../README.md">README</a> for setup and commands, the <a href="../templates/default/README.md">template guide</a> for the generated project, and the <a href="../schema/solutions.config.schema.json">configuration schema</a> for accepted fields.</p>
+  </section>
+
+  <section class="section" id="reading">
+    <h2>Further reading</h2>
+    <div class="reading">
+      <div>
+        <h3>Use the package</h3>
+        <ul>
+          <li><a href="../README.md">README</a> for installation and everyday commands.</li>
+          <li><a href="../skills/shelly-forge/SKILL.md">CLI workflow skill</a>, with <a href="../skills/shelly-forge/reference/cli.md">command reference</a>, <a href="../skills/shelly-forge/reference/testing.md">testing</a>, and <a href="../skills/shelly-forge/reference/debugging.md">debugging</a>.</li>
+          <li><a href="../skills/shelly-scripting/SKILL.md">Device scripting skill</a> for language constraints and script patterns.</li>
+          <li><a href="../templates/default/src/example/hello.test.ts">Generated example tests</a> and <a href="../src/testing/types.ts">simulator API types</a>.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Maintain the package</h3>
+        <ul>
+          <li><a href="../CHANGELOG.md">Changelog</a> for release changes.</li>
+          <li><a href="../CONTRIBUTING.md">Contributing</a> for development and verification.</li>
+          <li><a href="../AGENTS.md">Repository agent guide</a> for contributor instructions, distinct from the generated project's guide.</li>
+        </ul>
+        <h3>Check device behavior</h3>
+        <ul>
+          <li><a href="https://shelly-api-docs.shelly.cloud/gen2/Scripts/LanguageReference/">Official scripting language reference</a>.</li>
+          <li><a href="https://shelly-api-docs.shelly.cloud/gen2/Scripts/APIs/Shelly/">Official Shelly scripting API</a>.</li>
+          <li><a href="https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Script/">Official Script RPC component</a>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>shelly-forge / design / 0.4.0 / local checks do not replace target-device testing</footer>
+</main>
+</body>
+</html>

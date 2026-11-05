@@ -1,80 +1,39 @@
-import path from 'path';
-import chalk from 'chalk';
-import fs from 'fs-extra';
-import { SolutionsConfig } from '../solutions-config.js';
-import { ShellyDevice } from '../shelly-device.js';
-import { ScriptHashCache } from '../script-hash-cache.js';
-import { z } from 'zod';
-import { logger } from '../utils/logger.js';
-import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
+import type { Command } from 'commander';
+import { buildProject } from '../build/build-project.js';
+import { verifyArtifact } from '../build/manifest.js';
+import { runAction, type CommandContext, type CommandResult } from '../core/command.js';
+import { ProjectConfig, validateSelectedTargets } from '../core/config.js';
+import { deployScripts, validateVerifyTimeout, type DeployOptions, type DeployResult } from '../deploy/deployer.js';
 
-export const name = 'deploy';
-
-export const description = 'Deploy scripts to Shelly devices';
-
-export const inputSchema: { [key: string]: z.ZodTypeAny } = {
-    scriptName: z.string().optional().describe('Script selector to deploy (solution/script, solution-script, or unique script name)')
-};
-
-export async function callback(args: { scriptName?: string }) {
-    return await deploy(args.scriptName);
+export interface DeployCommandOptions extends DeployOptions {
+    build?: boolean;
 }
 
-export default async function deploy(scriptSelector?: string): Promise<string> {
-    try {
-        const config = new SolutionsConfig();
-        await config.load();
-        config.validateUniqueDeviceTargets();
+export async function deployProject(ctx: CommandContext, selector?: string, options: DeployCommandOptions = {}): Promise<CommandResult<DeployResult>> {
+    validateVerifyTimeout(options.verifyTimeoutMs);
+    const config = await ProjectConfig.load(ctx.projectDir);
+    const entries = config.select(selector);
+    const targets = validateSelectedTargets(config, entries, ctx.env);
+    const scripts = options.build === false
+        ? await Promise.all(entries.map(async entry => ({ entry, ...await verifyArtifact(ctx.projectDir, entry, ctx.env) })))
+        : (await buildProject(ctx, config, { selector })).scripts;
+    const data = await deployScripts(ctx, config, scripts, options, targets);
+    const changed = data.scripts.filter(script => script.action !== 'skipped').length;
+    return { summary: `${options.dryRun ? 'Planned' : 'Deployed'} ${changed} script(s), skipped ${data.scripts.length - changed}.`, data };
+}
 
-        const scripts = config.getScripts(scriptSelector);
-        const deployedScripts = [];
-
-        for (const { scriptConfig, scriptId, artifactName, targetScriptName } of scripts) {
-            logger.log(chalk.blue(`Processing ${scriptId} for on-device script ${targetScriptName}...`));
-
-            // Check if the built file exists
-            const builtFilePath = path.join(CURRENT_WORKING_DIRECTORY, 'dist', `${artifactName}.js`);
-            if (!(await fs.pathExists(builtFilePath))) {
-                logger.log(chalk.yellow(`Built file not found for ${scriptId}, skipping...`));
-                continue;
-            }
-
-            // Read the built JavaScript file
-            const code = await fs.readFile(builtFilePath, 'utf8');
-            const cacheKey = JSON.stringify([scriptId, scriptConfig.device, targetScriptName]);
-
-            // Check if the code has changed
-            if (!ScriptHashCache.hasChanged(code, cacheKey)) {
-                logger.log(chalk.yellow(`Script ${scriptId} unchanged, skipping deployment`));
-                continue;
-            }
-
-            // Deploy to device
-            logger.log(chalk.blue(`Deploying ${scriptId} as ${targetScriptName} to ${scriptConfig.device}...`));
-            const device = new ShellyDevice(scriptConfig.device);
-            await device.deploy(
-                targetScriptName,
-                code,
-                scriptConfig.enableOnBoot ?? true // Use config value or default to true
-            );
-
-            // Update hash after successful deployment
-            ScriptHashCache.updateHash(code, cacheKey);
-            logger.log(chalk.green(`✨ Successfully deployed ${scriptId}`));
-            deployedScripts.push(scriptId);
-
-            if (scriptConfig.enableOnBoot === false) {
-                logger.log(chalk.yellow(`Note: Script ${scriptId} is configured to not start on boot`));
-            }
-        }
-
-        if (deployedScripts.length === 0) {
-            return "No scripts were deployed (all scripts unchanged or not found)";
-        }
-
-        return `Successfully deployed ${deployedScripts.length} script(s): ${deployedScripts.join(', ')}`;
-    } catch (error) {
-        logger.error('Deploy failed', error);
-        throw error;
-    }
+export function register(program: Command): void {
+    program
+        .command('deploy [selector]')
+        .description('Deploy selected scripts')
+        .option('--force', 'Upload unchanged scripts')
+        .option('--no-build', 'Use existing build artifacts')
+        .option('--dry-run', 'Show the deployment without uploading')
+        .option('--no-verify', 'Skip post-deploy health checks')
+        .option('--no-rollback', 'Do not restore the last working script on failure')
+        .option('--verify-timeout <ms>', 'Health check timeout in milliseconds', Number, 3000)
+        .action(async function (this: Command, selector?: string) {
+            const options = this.opts();
+            await runAction(this, ctx => deployProject(ctx, selector, { ...options, verifyTimeoutMs: options.verifyTimeout }));
+        });
 }

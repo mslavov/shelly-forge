@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "moduleDetection": "force",
+    "noLib": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": []
+  },
+  "include": ["./*.ts", "../../../types/lib.shelly.d.ts", "../../../types/shelly.d.ts"]
+}

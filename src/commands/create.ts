@@ -1,63 +1,85 @@
-import fs from 'fs-extra';
-import path from 'path';
-import chalk from 'chalk';
-import { SolutionsConfig } from '../solutions-config.js';
-import { z } from 'zod';
-import { logger } from '../utils/logger.js';
-import { CURRENT_WORKING_DIRECTORY } from '../utils/cwd.js';
+import type { Command } from 'commander';
+import { lstat, mkdir, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { runAction, type CommandContext, type CommandResult } from '../core/command.js';
+import { ProjectConfig } from '../core/config.js';
+import { ForgeError } from '../core/errors.js';
+import { starterScript, starterTest } from '../scaffold/starter-files.js';
 
-export const name = 'create';
-
-export const description = 'Create a new Shelly script';
-
-export const inputSchema: { [key: string]: z.ZodTypeAny } = {
-    name: z.string().describe('Name of the script'),
-    hostname: z.string().describe('Hostname/IP of the Shelly device'),
-    solution: z.string().optional().describe('Solution name for organizing scripts')
-};
-
-export async function callback(args: { name: string, hostname: string, solution?: string }) {
-    return await create(args.name, args.hostname, args.solution);
+export function register(program: Command): void {
+    program
+        .command('create <solution> <script>')
+        .description('Add a script to the project')
+        .option('-d, --device <value>', 'Device hostname or IP address', '${DEVICE_HOSTNAME}')
+        .option('--no-boot', 'Do not enable the script on boot')
+        .action(async function (this: Command, solution: string, script: string) {
+            const options = this.opts<{ device: string; boot: boolean }>();
+            await runAction(this, ctx => handle(ctx, solution, script, options.device, options.boot));
+        });
 }
 
-export default async function create(name: string, hostname: string, solution = 'default'): Promise<string> {
+async function inspect(file: string): Promise<Awaited<ReturnType<typeof lstat>> | undefined> {
     try {
-        const baseDir = path.join(CURRENT_WORKING_DIRECTORY, 'src');
-        const scriptsDir = path.join(baseDir, solution);
-
-        await fs.ensureDir(scriptsDir);
-
-        const scriptPath = path.join(scriptsDir, `${name}.ts`);
-
-        if (await fs.pathExists(scriptPath)) {
-            throw new Error(`Script ${name} already exists at ${scriptPath}`);
-        }
-
-        const scriptContent = `print("Hello World");
-`;
-
-        await fs.writeFile(scriptPath, scriptContent, 'utf8');
-
-        const config = new SolutionsConfig();
-        if (await config.exists()) {
-            await config.load();
-        }
-
-        config.addScript(solution, name, {
-            src: `src/${solution}/${name}.ts`,
-            device: hostname,
-        });
-
-        await config.save();
-        logger.log(chalk.blue('Updated solutions.config.json'));
-
-        logger.log(chalk.green(`✨ Created new script at ${path.relative(CURRENT_WORKING_DIRECTORY, scriptPath)}`));
-        logger.log(chalk.yellow('\nTo start development:'));
-        logger.log(chalk.yellow(`SCRIPT_NAME=${name} npm run dev`));
-
-        return `Created new script '${name}' in solution '${solution}' for device ${hostname}`;
+        return await lstat(file);
     } catch (error) {
-        logger.error('Failed to create script', error);
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
     }
+}
+
+async function handle(ctx: CommandContext, solution: string, script: string, device: string, enableOnBoot: boolean): Promise<CommandResult> {
+    for (const [label, name] of [['solution', solution], ['script', script]]) {
+        if (name.length === 0 || /[^A-Za-z0-9_-]/.test(name)) {
+            throw new ForgeError('USAGE', `Invalid ${label} name "${name}"`, {
+                hint: 'Use only letters, digits, underscores, and hyphens.',
+            });
+        }
+    }
+    if (!device.trim()) throw new ForgeError('USAGE', 'Device must not be empty');
+
+    const id = `${solution}/${script}`;
+    const src = `src/${solution}/${script}.ts`;
+    const test = `src/${solution}/${script}.test.ts`;
+    const config = await ProjectConfig.loadOrCreate(ctx.projectDir);
+    if (config.scripts().some(entry => entry.id === id)) {
+        throw new ForgeError('USAGE', `Script "${id}" already exists`);
+    }
+    config.addScript(solution, script, { src, device, enableOnBoot });
+
+    const directories = [path.join(ctx.projectDir, 'src'), path.join(ctx.projectDir, 'src', solution)];
+    for (const directory of directories) {
+        const entry = await inspect(directory);
+        if (entry && (!entry.isDirectory() || entry.isSymbolicLink())) {
+            throw new ForgeError('USAGE', `Source directory must be a directory, not a file or symlink: ${directory}`);
+        }
+    }
+    for (const file of [src, test]) {
+        if (await inspect(path.join(ctx.projectDir, file))) {
+            throw new ForgeError('USAGE', `Refusing to overwrite existing file ${file}`);
+        }
+    }
+
+    const created: string[] = [];
+    try {
+        for (const directory of directories) await mkdir(directory, { recursive: true });
+        for (const [file, content] of [[src, starterScript(solution, script)], [test, starterTest(solution, script)]]) {
+            const absolute = path.join(ctx.projectDir, file);
+            await writeFile(absolute, content, { encoding: 'utf8', flag: 'wx' });
+            created.push(absolute);
+        }
+        await config.save();
+    } catch (error) {
+        for (const file of created) await rm(file, { force: true });
+        if (error instanceof ForgeError) throw error;
+        if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+            throw new ForgeError('USAGE', 'Refusing to overwrite an existing source or test file', { cause: error });
+        }
+        throw new ForgeError('CONFIG', `Could not create script "${id}"`, { cause: error });
+    }
+
+    const nextSteps = [`npm run build -- ${id}`, 'npm test', `npm run dev -- ${id}`];
+    return {
+        summary: [`Created script "${id}".`, `  ${src}`, `  ${test}`, '', 'Next steps:', ...nextSteps.map(step => `  ${step}`)].join('\n'),
+        data: { id, src, test, device, enableOnBoot, nextSteps },
+    };
 }

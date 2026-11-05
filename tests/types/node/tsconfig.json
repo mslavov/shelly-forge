@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "nodenext",
+    "moduleDetection": "force",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "types": ["node"]
+  },
+  "include": ["./*.ts", "../../../types/shelly.d.ts"]
+}

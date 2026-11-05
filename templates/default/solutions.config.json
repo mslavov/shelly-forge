@@ -1,1 +1,10 @@
-{}
+{
+  "$schema": "./node_modules/shelly-forge/schema/solutions.config.schema.json",
+  "example": {
+    "hello": {
+      "src": "src/example/hello.ts",
+      "device": "${DEVICE_HOSTNAME}",
+      "enableOnBoot": true
+    }
+  }
+}

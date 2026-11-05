@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": false,
-    "esModuleInterop": true,
+    "moduleDetection": "force",
+    "noLib": true,
+    "strict": true,
+    "noEmit": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": []
   },
   "include": [
-    "src/**/*",
-    "node_modules/shelly-forge/types/**/*"
-  ]
+    "src/**/*.ts",
+    "node_modules/shelly-forge/types/lib.shelly.d.ts",
+    "node_modules/shelly-forge/types/shelly.d.ts"
+  ],
+  "exclude": ["src/**/*.test.ts"]
 }

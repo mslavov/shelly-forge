@@ -1,71 +1,44 @@
-import chalk from 'chalk';
-import { SolutionsConfig } from '../solutions-config.js';
-import { ShellyDevice } from '../shelly-device.js';
-import { z } from 'zod';
-import { logger } from '../utils/logger.js';
+import { Argument, type Command } from 'commander';
+import { runAction, type CommandContext, type CommandResult } from '../core/command.js';
+import { ProjectConfig, type DeviceTarget } from '../core/config.js';
+import { ForgeError } from '../core/errors.js';
+import { deviceKey } from '../core/hosts.js';
+import { RpcClient } from '../device/rpc-client.js';
+import { setDebugWebsocket } from '../device/scripts.js';
 
-export const name = 'debug';
-
-export const description = 'Enable or disable debug mode for Shelly script';
-
-export const inputSchema: { [key: string]: z.ZodTypeAny } = {
-    mode: z.enum(['on', 'off']).describe('Debug mode: on or off'),
-    scriptName: z.string().optional().describe('Name of the script (optional)')
-};
-
-export async function callback(args: { mode: 'on' | 'off', scriptName?: string }) {
-    return await debug(args.mode, args.scriptName);
+export interface DebugResult {
+    host: string;
+    enabled: boolean;
+    changed: boolean;
+    restartRequired: boolean;
 }
 
-export default async function debug(mode: string, scriptName?: string): Promise<string> {
-    try {
-        if (mode !== 'on' && mode !== 'off') {
-            throw new Error('Debug mode must be either "on" or "off"');
-        }
-
-        const config = new SolutionsConfig();
-        await config.load();
-        const debugEnabled = mode === 'on';
-
-        if (scriptName) {
-            // Debug specific script
-            const script = config.findScript(scriptName);
-            if (!script) {
-                throw new Error(`Script "${scriptName}" not found in solutions.config.json`);
-            }
-
-            logger.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
-            const device = new ShellyDevice(script.scriptConfig.device);
-            await device.setDebug(debugEnabled);
-            logger.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
-            return `Debug mode set to ${mode} for script ${scriptName}`;
-        } else {
-            // Debug all scripts
-            const scripts = config.getAllScripts();
-            // Keep track of devices we've already configured to avoid duplicates
-            const configuredDevices = new Set<string>();
-            const configuredScripts: string[] = [];
-
-            for (const { scriptName, scriptConfig } of scripts) {
-                if (configuredDevices.has(scriptConfig.device)) {
-                    logger.log(
-                        chalk.yellow(`Skipping ${scriptName} as device ${scriptConfig.device} was already configured`)
-                    );
-                    continue;
-                }
-
-                logger.log(chalk.blue(`Setting debug ${mode} for script: ${scriptName}`));
-                const device = new ShellyDevice(scriptConfig.device);
-                await device.setDebug(debugEnabled);
-                configuredDevices.add(scriptConfig.device);
-                configuredScripts.push(scriptName);
-                logger.log(chalk.green(`✨ Successfully set debug ${mode} for ${scriptName}`));
-            }
-
-            return `Debug mode set to ${mode} for ${configuredDevices.size} device(s) running ${configuredScripts.length} script(s)`;
-        }
-    } catch (error) {
-        logger.error('Debug command failed', error);
-        throw error;
+export async function debugCommand(ctx: CommandContext, mode: string, selector?: string): Promise<CommandResult<{ devices: DebugResult[] }>> {
+    if (mode !== 'on' && mode !== 'off') throw new ForgeError('USAGE', 'Debug mode must be on or off');
+    const config = await ProjectConfig.load(ctx.projectDir);
+    const targets = new Map<string, DeviceTarget>();
+    for (const entry of config.select(selector)) {
+        const target = config.resolveDevice(entry, ctx.env);
+        targets.set(deviceKey(target.host), target);
     }
+    const devices: DebugResult[] = [];
+    for (const target of targets.values()) {
+        const result = await setDebugWebsocket(new RpcClient(target, { logger: ctx.logger }), mode === 'on');
+        devices.push({ host: target.host, enabled: mode === 'on', ...result });
+    }
+    return {
+        summary: devices.map(device => `${device.host}: debug ${mode}, ${device.changed ? 'changed' : 'unchanged'}${device.restartRequired ? ', restart required' : ''}`).join('\n'),
+        data: { devices },
+    };
+}
+
+export function register(program: Command): void {
+    program
+        .command('debug')
+        .description('Enable or disable device debug logging')
+        .addArgument(new Argument('<on|off>', 'Debug logging mode').choices(['on', 'off']))
+        .argument('[selector]', 'Script selector')
+        .action(async function (this: Command, mode: string, selector?: string) {
+            await runAction(this, ctx => debugCommand(ctx, mode, selector));
+        });
 }

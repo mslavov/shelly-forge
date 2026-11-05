@@ -1,60 +1,71 @@
-# Shelly Forge Project
+# Shelly script project
 
-This is a Shelly Forge project for developing scripts for Shelly smart home devices.
+This project builds TypeScript scripts for Shelly devices with scripting support.
+Use Node.js 22.12 or newer.
 
-## Getting Started
+## Set up
 
-1. Install dependencies:
-
-```bash
+```sh
 npm install
+cp .env.example .env
 ```
 
-2. Create a new script:
+Set `DEVICE_HOSTNAME` in `.env` to your device's hostname or IP address.
+Uncomment `SHELLY_PASSWORD` if the device requires authentication.
+Only `SHELLY_PUBLIC_*` values enter the built script. Never use that prefix for secrets.
+Keep `SHELLY_PUBLIC_GREETING` set before building. An empty value uses the script's
+`Hello` fallback; an unset value fails the build checks.
 
-```bash
-npm run create my-script '${DEVICE_HOSTNAME}' solutionA
+## Test and build
+
+```sh
+npm run typecheck
+npm test
+npm run check
+npm run build
 ```
 
-This will create a new script in `src/solutionA/my-script.ts`
+`src/example/hello.ts` increments the device's `example.hello.count` KVS value once
+per minute and prints the greeting and count. Its test loads the bundled script
+with `shelly-forge/testing`, advances a virtual clock, and checks KVS and logs.
+The test does not contact a device. Edit the script and test together, then run
+the commands above before deploying.
 
-3. Start development:
+`tsconfig.json` checks device code against Shelly's supported APIs.
+`tsconfig.test.json` checks tests against Node.js APIs.
+Both use `moduleDetection: "force"`, so scripts can reuse top-level names without
+adding `export {}`. Declare project-wide type extensions inside `declare global`.
+Build output goes to `dist/`, with hashes and checks in `dist/manifest.json`.
 
-```bash
-npm run dev
+## Run on a device
+
+```sh
+npm run deploy -- example/hello
+npm run status -- example/hello
+npm run logs -- example/hello
+npm run dev -- example/hello
 ```
 
-## Project Structure
+`dev` watches the selected script, rebuilds and deploys changes, and streams logs.
+Use `--verify-timeout <ms>` with `deploy` or `dev` to change the default 3000 ms
+health window. Every status poll in that window must report running without errors.
+Press Ctrl+C to stop. If an upload is in progress, the first interrupt waits for
+upload, configuration, and start to finish before stopping the command. A second
+Ctrl+C forces exit and can leave the device partly updated.
+Deployment starts the script and enables it on boot by default.
+The greeting counter writes to KVS once per minute while the script runs.
 
-```
-├── src/             # Source code directory
-│   ├── solutionA/   # Your Shelly scripts for the solution
-│   └── index.ts     # Main entry file
-├── dist/            # Compiled output
-└── node_modules/    # Dependencies
-```
+## Add a script
 
-## Example Script
-
-Here's a basic example of a Shelly script that monitors temperature:
-
-```typescript
-// Subscribe to temperature updates
-Shelly.addEventHandler(async (event) => {
-  if (event.component === "temperature") {
-    print("Temperature: " + event.data.tC + "°C");
-  }
-});
+```sh
+npx shelly-forge create lighting hall
+npm test
+npm run dev -- lighting/hall
 ```
 
-## Available Commands
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run deploy` - Deploy to device
-- `npm run create <name> <hostname> <solution>` - Create a new script
-
-## Documentation
-
-For more detailed information about Shelly Forge, please visit:
-[Shelly Forge Documentation](https://github.com/mslavov/shelly-forge)
+Pass the solution and script names as separate arguments. `create` adds
+`src/lighting/hall.ts`, its test, and an entry in
+`solutions.config.json`. Names accept letters, digits, underscores, and hyphens.
+Use `--device <host>` to override `${DEVICE_HOSTNAME}` or `--no-boot` to disable
+startup on boot. The generated script uses the same minute counter as the example;
+replace it with your automation.

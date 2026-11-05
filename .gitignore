@@ -17,5 +17,7 @@ lib/
 tmp/
 
 .shelly-forge/
+coverage/
+.vitest/
 
 scratch/

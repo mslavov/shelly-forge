@@ -1,6 +1,6 @@
 {
     "name": "shelly-forge",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "type": "module",
     "description": "A framework for developing Shelly device scripts",
     "author": "Milko Slavov <milko.slavov@gmail.com>",
@@ -11,34 +11,26 @@
         "url": "git+https://github.com/mslavov/shelly-forge.git"
     },
     "bin": {
-        "shelly-forge": "dist/shelly-forge.js"
+        "shelly-forge": "dist/cli.js"
     },
     "scripts": {
+        "build": "tsc -p tsconfig.json",
         "clean": "rm -rf dist",
+        "typecheck": "tsc -p tsconfig.check.json",
+        "test": "npm run build && vitest run",
         "prepublishOnly": "npm run clean && npm run build",
-        "build": "tsc",
-        "test": "npm run build && node --test tests/*.test.mjs",
         "version": "node scripts/sync-template-version.mjs",
-        "watch": "tsc -w",
-        "start": "node dist/shelly-forge.js",
-        "mcp-server": "node dist/mcp-server.js"
+        "smoke": "node scripts/smoke-test.mjs",
+        "watch": "tsc -p tsconfig.json -w"
     },
     "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.8.0",
-        "@types/node": "^20.0.0",
-        "axios": "^1.21.0",
-        "bonjour-service": "^1.3.0",
-        "chalk": "^4.1.2",
-        "commander": "^8.3.0",
-        "dotenv": "^10.0.0",
-        "esbuild": "0.25.12",
-        "fs-extra": "^10.0.0",
-        "inquirer": "^8.2.7",
-        "typescript": "^5.0.0",
-        "ws": "^8.2.3",
-        "zod": "^3.24.2"
+        "bonjour-service": "^1.4.4",
+        "commander": "^15.0.0",
+        "esbuild": "0.28.2",
+        "typescript": "^5.9.3",
+        "ws": "^8.22.1",
+        "zod": "^4.6.7"
     },
-    "main": "dist/shelly-forge.js",
     "types": "types/index.d.ts",
     "keywords": [
         "shelly",
@@ -49,15 +41,28 @@
     "files": [
         "dist",
         "types",
-        "templates"
+        "templates",
+        "skills",
+        "schema"
     ],
     "devDependencies": {
-        "@types/fs-extra": "^11.0.4",
-        "@types/inquirer": "^9.0.7"
+        "@types/node": "^22.20.5",
+        "@types/ws": "^8.18.2",
+        "vitest": "^5.1.0"
     },
-    "overrides": {
-        "axios": {
-            "follow-redirects": "^1.16.2"
-        }
+    "engines": {
+        "node": ">=22.12"
+    },
+    "exports": {
+        ".": {
+            "types": "./types/index.d.ts"
+        },
+        "./testing": {
+            "types": "./dist/testing/index.d.ts",
+            "default": "./dist/testing/index.js"
+        },
+        "./types/*": "./types/*",
+        "./schema/*": "./schema/*",
+        "./package.json": "./package.json"
     }
 }
