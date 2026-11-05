@@ -13,7 +13,7 @@ function keyParam(params: Record<string, unknown>): string {
 }
 
 function matcher(pattern: unknown): RegExp {
-    if (pattern === undefined) return /^.*$/i;
+    if (pattern === undefined) return /^.*$/is;
     if (typeof pattern !== 'string') throw new RpcError(-103, 'match must be a string');
     let expression = '';
     for (const char of pattern) {

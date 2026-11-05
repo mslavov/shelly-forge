@@ -6,11 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-11-03
+## [0.4.0] - 2026-11-05
 
 ### Added
 
 - Add `check`, `status`, `rpc`, `eval`, `dev`, and `skills` commands.
+- Add `shelly-forge emulate` and the `shelly-forge/emulator` API for local development and end-to-end CLI tests without hardware. Support HTTP RPC, WebSocket logs, digest authentication through `SHELLY_EMULATOR_PASSWORD`, shared switch and KVS state, script lifecycle operations, and opt-in mDNS. Scripts can call `Shelly.*`, `Sys.*`, and `Script.*` through `Shelly.call`; unknown methods return 404 `No handler for <Method>`. See the [emulator reference](skills/shelly-forge/reference/cli.md#emulate).
 - Add global `--cwd`, `--json`, `--verbose`, and `--quiet` options, structured errors, and consistent exit codes.
 - Type-check projects before bundling and check final artifacts for unsupported APIs, unresolved environment access, callback nesting, and size limits. Add `build --no-typecheck`, `--no-minify`, `--no-check`, and `--strict`; `check` supports `--no-typecheck` and `--strict`.
 - Add a device-specific TypeScript library and updated Shelly API declarations. Keep Node-side test types separate from device types.
@@ -55,9 +56,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Invalidate deployment skip metadata before uploads so a failed or partial upload cannot be treated as unchanged on retry.
 - Reject ambiguous selectors, duplicate artifact filenames, unsafe source paths, and duplicate on-device targets.
 - Resolve selected `deploy` and `dev` targets strictly without failing on unset references in unrelated entries; include other resolvable targets in duplicate checks.
+- Accept the capitalized BLE names that earlier firmware and Shelly's examples use (`BLE.Scanner.Start`, `Subscribe`, `Stop`, `GetScanOptions`, and the `BLE.GAP.Parse*`/`HasService` helpers) in the typings and the simulator, alongside the documented lowercase names. Accept two-argument scan callbacks in strict projects.
+- Match RPC method names case-insensitively in the simulator and emulator, as firmware does (`"switch.set"`). Answer `<Component>.GetStatus` and `<Component>.GetConfig` for any configured component, such as `temperature:101`.
+- Make the simulator's `JSON.parse` accept hex number literals such as `"0x0ba9"`, as the device does.
+- Add emulator `components`, script `rpc` overrides, `advance(ms)`, BLE advertisement and MQTT injection, and `emulate --components <file>` so tests can drive timer-, BLE-, and MQTT-driven scripts.
 
 ### Security
 
+- Require a nonempty emulator password for non-loopback binds. An empty `SHELLY_EMULATOR_PASSWORD` means no password. Reject `--mdns` on loopback with exit 2; mDNS requires a non-loopback bind and a password. Reject requests with an `Origin` header and non-local `Host` headers on loopback. Limit synchronous script execution to 1000 ms at top level, in each callback, and in eval. A timeout crashes the script; eval instead returns an error. Node `vm` is not a security boundary; only run trusted code and verify behavior on hardware.
 - Upgrade to Zod 4 and remove vulnerable dependency chains from the old RPC client and prompt packages.
 - Keep credentials out of public build values, diagnostic logs, and JSON results. Preserve unmarked user-owned skill directories unless replacement is explicit.
 
@@ -69,7 +75,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 4. Update creation calls to `shelly-forge create lighting hallway --device '${DEVICE_HOSTNAME}'`. The solution comes first, the script second, and the device is an option rather than a positional argument.
 5. Delete `build-cache/` if present and ignore `.shelly-forge/` in version control. Do not delete the new directory during routine troubleshooting; it contains rollback artifacts.
 6. Remove old Shelly Forge MCP entries from editor configuration. Run `shelly-forge skills install` and use the [CLI skill](skills/shelly-forge/SKILL.md) and [scripting skill](skills/shelly-scripting/SKILL.md).
-7. Set every referenced `SHELLY_PUBLIC_*` build value, even to an empty string when a source fallback is intended. Run tests and `shelly-forge check --strict`, fix the findings, then deploy to a confirmed target.
+7. Replace deep imports such as `shelly-forge/dist/shelly-forge.js`; the package `exports` map blocks them. Resolve the CLI from `shelly-forge/package.json`'s `bin` field. Give Node helper scripts run with ts-node their own tsconfig, because the device tsconfig sets `noLib`.
+8. Set every referenced `SHELLY_PUBLIC_*` build value, even to an empty string when a source fallback is intended. Run tests and `shelly-forge check --strict`, fix the findings, then deploy to a confirmed target.
 
 ## [0.3.0] - 2026-11-03
 

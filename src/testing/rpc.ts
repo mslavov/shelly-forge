@@ -14,10 +14,41 @@ export function rpcParams(value: unknown): Record<string, unknown> {
     return value as Record<string, unknown>;
 }
 
-export function createRpc(host: ScriptHost, execute: (method: string, params: unknown) => unknown) {
+export function createRpc(host: ScriptHost, execute: (method: string, params: unknown) => unknown, options: {
+    recordHistory?: boolean;
+    schedule?(callback: () => void): void;
+} = {}) {
     const calls: Array<ShellyRuntime['calls'][number]> = [];
     const pending: PendingCall[] = [];
     let flushing = false;
+    let scheduled = false;
+    function executeCall(call: PendingCall): void {
+        let result: unknown;
+        let errorCode = 0;
+        let errorMessage = '';
+        try {
+            result = execute(call.method, call.params);
+        } catch (error) {
+            if (!isRpcError(error)) throw error;
+            result = null;
+            errorCode = error.code;
+            errorMessage = error.message;
+        }
+        if (call.callback) host.invoke(call.callback, [host.toScript(result), errorCode, errorMessage, call.userdata]);
+    }
+    function scheduleNext(): void {
+        if (!options.schedule || scheduled || pending.length === 0) return;
+        scheduled = true;
+        options.schedule(() => {
+            try {
+                const call = pending.shift();
+                if (call) executeCall(call);
+            } finally {
+                scheduled = false;
+                scheduleNext();
+            }
+        });
+    }
     return {
         calls,
         clear(): void { pending.length = 0; },
@@ -28,28 +59,19 @@ export function createRpc(host: ScriptHost, execute: (method: string, params: un
                 throw new Error(`inFlightCalls limit exceeded (${RESOURCE_LIMITS.inFlightCalls})`);
             }
             const snapshot = copyJson(params);
-            calls.push({ method, params: copyJson(snapshot) });
+            if (options.recordHistory !== false) calls.push({ method, params: copyJson(snapshot) });
             pending.push({ method, params: snapshot, callback, userdata });
+            scheduleNext();
         },
         flush(): void {
+            if (options.schedule) return;
             if (flushing) return;
             flushing = true;
             try {
                 for (;;) {
                     const call = pending.shift();
                     if (!call) break;
-                    let result: unknown;
-                    let errorCode = 0;
-                    let errorMessage = '';
-                    try {
-                        result = execute(call.method, call.params);
-                    } catch (error) {
-                        if (!isRpcError(error)) throw error;
-                        result = null;
-                        errorCode = error.code;
-                        errorMessage = error.message;
-                    }
-                    if (call.callback) host.invoke(call.callback, [host.toScript(result), errorCode, errorMessage, call.userdata]);
+                    executeCall(call);
                 }
             } finally {
                 flushing = false;

@@ -146,6 +146,11 @@ BLE.Scanner.subscribe(function (event, result, context) {
 BLE.Scanner.start({ duration_ms: BLE.Scanner.INFINITE_SCAN, rssi_thr: -70, filters: [{ name: 'SBDW*' }] });
 BLE.Scanner.subscribe(null);
 console.log(BLE.Scanner.getScanOptions(), BLE.Scanner.isRunning(), BLE.Scanner.stop());
+BLE.Scanner.Subscribe(function (event, result) {
+  if (event === BLE.Scanner.SCAN_RESULT && result) console.log(result.addr, BLE.GAP.ParseManufacturerData(result.advData));
+});
+BLE.Scanner.Start({ duration_ms: BLE.Scanner.INFINITE_SCAN, active: false }, function (event) { console.log(event); });
+console.log(BLE.Scanner.GetScanOptions(), BLE.Scanner.Stop(), BLE.GAP.HasService('', '181a'), BLE.GAP.ParseServiceData('', '181a'), BLE.GAP.ParseName(''));
 
 HTTPServer.registerEndpoint('status', function (request, response, context) {
   console.log(request.method, request.query, request.body, request.headers, context.name);

@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/shelly-forge.svg)](https://badge.fury.io/js/shelly-forge)
 
-Shelly Forge is a TypeScript CLI for building, testing, and deploying scripts to Shelly devices with scripting support. It checks device code, provides a local runtime simulator, and verifies scripts after deployment.
+Shelly Forge is a TypeScript CLI for building, testing, and deploying scripts to Shelly devices with scripting support. It checks device code, provides a local runtime simulator and device emulator, and verifies scripts after deployment.
 
 ## Install and start a project
 
@@ -105,6 +105,7 @@ See the [CLI reference](skills/shelly-forge/reference/cli.md) for options, selec
 | `eval <selector> <code>` | Evaluate code in a running on-device script. |
 | `discover` | Find devices through mDNS and read their identity. |
 | `skills <action> [names...]` | Install or list bundled agent skills. |
+| `emulate` | Run a local device server for development and CLI tests. |
 
 Selectors accept `solution/script`, `solution-script`, a unique script name, or a unique `targetScriptName`. Omitting an optional selector selects all entries. A solution name alone does not select a group.
 
@@ -131,6 +132,46 @@ The first uncaught script error throws `ShellyScriptError` and sets `runtime.cra
 Strict mode removes undeclared modern built-ins, including modern String methods, `Object.assign`, `Object.entries`, `Array.from`, and `Number.isInteger`. TypeScript helpers that detect missing built-ins still work. `String.prototype.at` returns a numeric character code or `undefined` outside the string, even with `strictBuiltins: false`. The simulator otherwise uses Node string semantics, not the device's UTF-8 byte indexing.
 
 See the [testing reference](skills/shelly-forge/reference/testing.md) for events, MQTT, KVS, HTTP, and RPC failure injection. The simulator does not model every firmware API or device resource. Passing tests does not replace on-device verification.
+
+## Develop against a local emulator
+
+Run `npx shelly-forge emulate` to start a device server without hardware. Set
+`DEVICE_HOSTNAME=127.0.0.1:8080` in your project's `.env`, then use the normal
+`deploy`, `status`, `logs`, `rpc`, `eval`, or interactive `dev` commands. Ctrl+C
+stops the server. Its state is in memory and does not survive shutdown.
+
+Set `SHELLY_EMULATOR_PASSWORD` for the server and the same value as
+`SHELLY_PASSWORD` for the client when testing authentication. Keep the default
+loopback binding. A non-loopback bind requires a nonempty server password or
+exits 2. `--mdns` requires a non-loopback bind, such as `--bind 0.0.0.0`, and a
+password. The server rejects requests with an `Origin` header and rejects
+non-local `Host` headers on loopback. See the [emulator reference](skills/shelly-forge/reference/cli.md#emulate)
+for options, supported RPC methods, log frames, and the `shelly-forge/emulator`
+programmatic API.
+
+Use `--components <file>` to load a JSON object of component keys and optional
+`status` and `config` objects, or pass `components` to `startEmulator`.
+RPC names are case-insensitive, and the programmatic API can inject BLE
+advertisements and MQTT messages or connection changes for running scripts.
+Call `emulator.advance(ms)` with a finite nonnegative integer to advance shared
+device and script time through due callbacks and timers without waiting; real-time
+ticking continues afterward.
+Each script has a limit of 1000 timer callbacks per engine advance and 1000 RPC
+callbacks or zero-time iterations per simulated timestamp; exceeding either
+limit crashes only that script.
+The existing 1000 ms execution timeout applies to each script callback, not the
+entire advance.
+
+Scripts run in Node `vm`, which is not a security boundary. Only run code you
+trust. Top-level code, each callback, and eval have a 1000 ms synchronous execution
+limit. Exceeding it crashes the script, except eval returns an error. Scripts can
+use `Shelly.call` for the emulator's `Shelly.*`, `Sys.*`, and `Script.*` methods;
+unknown methods return 404 `No handler for <Method>`. Memory, CPU, timing, and
+engine quirks differ from hardware. Verify on hardware too.
+The emulator also runs end-to-end CLI tests in CI. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for that suite and the opt-in
+`npm run test:device` workflow with `SHELLY_E2E_HOST` and optional
+`SHELLY_E2E_PASSWORD`.
 
 ## Agent support
 

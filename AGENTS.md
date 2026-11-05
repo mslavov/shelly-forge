@@ -1,6 +1,6 @@
 # Agent contributor guide
 
-This repository contains the Shelly Forge CLI and simulator. It is not a generated device project. Read [README.md](README.md) for user behavior and [CONTRIBUTING.md](CONTRIBUTING.md) for setup and release instructions. Use [docs/design.html](docs/design.html) for the implementation design.
+This repository contains the Shelly Forge CLI, simulator, and device emulator. It is not a generated device project. Read [README.md](README.md) for user behavior and [CONTRIBUTING.md](CONTRIBUTING.md) for setup and release instructions. Use [docs/design.html](docs/design.html) for the implementation design.
 
 ## Source layout
 
@@ -13,12 +13,15 @@ This repository contains the Shelly Forge CLI and simulator. It is not a generat
 | `src/deploy/` | Uploads, startup verification, cache metadata, and rollback artifacts. |
 | `src/dev/` | File watching and serialized build/deploy cycles. |
 | `src/scaffold/` | Project creation, starter files, and skill installation. |
-| `src/testing/` | The public `shelly-forge/testing` simulator. |
+| `src/testing/` | The public `shelly-forge/testing` simulator and shared script engine and device state. |
+| `src/emulator/` | The `shelly-forge/emulator` server, RPC router, script manager, digest auth, log broadcaster, and mDNS publisher. |
 | `types/` | Device library and Shelly API declarations. |
 | `schema/` | JSON schema for `solutions.config.json`. |
 | `templates/default/` | Files copied by `init`. |
 | `skills/` | Bundled CLI and device-scripting instructions and references. |
 | `tests/` | Vitest tests by area and shared helpers. |
+| `tests/e2e/` | Built CLI scenarios against the local emulator, included in the regular suite. |
+| `tests/hardware/` | Opt-in real-device scenarios, excluded from the regular suite. |
 | `scripts/`, `.github/workflows/` | Version synchronization, release checks, package smoke test, and publishing. |
 
 `src/version.ts` reads the version from `package.json`. `src/core/runtime-profile.ts` owns shared device limits and unsupported APIs. Keep build checks, typings, simulator behavior, and skill references consistent when changing those rules.
@@ -46,6 +49,8 @@ npm run build
 npm run typecheck
 npx vitest run
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for emulator end-to-end tests and the opt-in `npm run test:device` workflow with `SHELLY_E2E_HOST` and optional `SHELLY_E2E_PASSWORD`. Do not run the hardware suite without authorization.
 
 Run the relevant area while iterating, for example `npx vitest run tests/build`. Run `npm run smoke` and `npm pack --dry-run` when package contents, exports, templates, or dependency behavior change. The smoke test needs npm registry access. Report commands run, failures, and limits of verification.
 

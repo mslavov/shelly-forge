@@ -18,9 +18,10 @@ const commandOptions = {
     eval: [],
     discover: ['--duration'],
     skills: ['--force'],
+    emulate: ['--port', '--bind', '--model', '--switches', '--kvs', '--components', '--mdns'],
 };
 
-test('registers exactly the thirteen commands in help order with all options', () => {
+test('registers the commands in help order with all options', () => {
     const program = new Command();
     for (const register of ALL_COMMANDS) register(program);
     expect(program.commands.map(command => command.name())).toEqual(Object.keys(commandOptions));

@@ -60,6 +60,15 @@ Shelly.addStatusHandler(onTemperature);
 may return `null`. `Shelly.getComponentConfig` also returns `null` when unavailable.
 `Shelly.emitEvent(name, data)` accepts JSON data for a custom event.
 
+The device matches `Shelly.call` method names case-insensitively, so `"switch.set"`
+reaches `Switch.Set`. The typings check parameters only for the documented spelling;
+prefer it. RPC error codes are negative (for example -103 invalid argument, -105 not
+found), so test `error_code !== 0` rather than `error_code > 0`.
+
+The device's `JSON.parse` reads numbers with its JavaScript lexer, so hex literals
+such as `JSON.parse("0x" + "0ba9")` return a number. Node rejects them; the forge
+simulator accepts them to match the device.
+
 ## Timers
 
 [`Timer`](https://shelly-api-docs.shelly.cloud/gen2/Scripts/APIs/Timer/) uses
@@ -119,7 +128,12 @@ Script.storage.setItem("mode", mode);
 ## BLE scanning and advertisement parsing
 
 The current [BLE API](https://shelly-api-docs.shelly.cloud/gen2/Scripts/APIs/BLE/)
-uses lowercase method names. Names are case-sensitive.
+documents lowercase method names. Earlier firmware and Shelly's published examples use
+capitalized names (`BLE.Scanner.Start`, `Subscribe`, `Stop`, `GetScanOptions`,
+`BLE.GAP.ParseManufacturerData`, `ParseName`, `HasService`, `ParseServiceData`).
+The typings and the simulator accept both spellings. Use the capitalized names on
+devices whose firmware predates the lowercase API, and check on the device before
+switching an existing script.
 
 | API | Behavior |
 | --- | --- |

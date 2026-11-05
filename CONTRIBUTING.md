@@ -29,6 +29,33 @@ These commands run in this repository, not in a generated device project.
 
 The smoke test installs dependencies and needs npm registry access. The regular test suite uses local fakes and does not contact real devices. Rebuild before CLI integration tests because they run `dist/cli.js`.
 
+## End-to-end tests and optional device tests
+
+Run the CLI scenario against a local emulator with:
+
+```sh
+npm run build
+npx vitest run tests/e2e
+```
+
+The regular suite includes these tests and excludes `tests/hardware/**`. The scenario starts `shelly-forge emulate --port 0` on `127.0.0.1` with a test password. It initializes a temporary consumer project and exercises build, check, deploy, status, unchanged deploys, bounded logs, RPC, eval, watch mode and rollback after a deliberate script crash. Emulator-only tests also check authentication failure, switch status handlers and log reconnection after reboot. Keep local fixtures on loopback without mDNS. Non-loopback binds require a nonempty password; `--mdns` requires a non-loopback bind and therefore a password. See the [emulator reference](skills/shelly-forge/reference/cli.md#emulate) for options and safety rules.
+
+Device tests are opt-in. They fail before contacting any device when `SHELLY_E2E_HOST` is unset. Select only a device you are authorized to modify:
+
+```sh
+SHELLY_E2E_HOST=192.168.1.50 npm run test:device
+```
+
+For password-protected devices, provide `SHELLY_E2E_PASSWORD` through your shell environment or secret manager. Do not put passwords in committed files or command history. `SHELLY_E2E_HOST` accepts a hostname or IP address with an optional port, so the same suite can target a running local emulator:
+
+```sh
+SHELLY_E2E_HOST=127.0.0.1:8080 npm run test:device
+```
+
+The suite requires a free script slot or an existing script named `shelly-forge-e2e`. It replaces, runs, evaluates, deliberately crashes and then deletes that dedicated script. Do not store useful code under that name. It uses a 500 ms counter timer and temporarily enables `debug.websocket.enable`, then restores its original value in cleanup. Log assertions are skipped with a message if `Sys.SetConfig` reports `restart_required`. Other scenario steps still run.
+
+Device tests never call `Switch.*`, reboot the device, write KVS entries or modify other scripts. They use the same scenario as the emulator tests, without its switch, reboot and wrong-password cases. Cleanup runs on test failures, but a killed process or lost device connection can prevent restoration. In that case, delete `shelly-forge-e2e` and restore the device's previous websocket debug setting manually.
+
 ## Tests and changes
 
 Tests live under `tests/<area>/*.test.ts`. Areas cover core behavior, builds, devices, deployment, device commands, development watches, logs, discovery, scaffolding, the simulator, typings, skills, and releases. Unit tests import from `src/`.

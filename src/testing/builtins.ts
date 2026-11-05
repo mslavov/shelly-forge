@@ -27,6 +27,21 @@ export function installBuiltins(context: Context, strict: boolean): void {
         var code = String(this).charCodeAt(index);
         return isNaN(code) ? undefined : code;
     };`, context);
+    // The device's JSON.parse reads numbers with its JavaScript lexer, so hex literals such as "0x0ba9" parse.
+    runInContext(`(function (nativeParse) {
+        JSON.parse = function parse(text, reviver) {
+            try {
+                return nativeParse(text, reviver);
+            } catch (error) {
+                var source = String(text);
+                var converted = source.replace(/"(?:\\\\.|[^"\\\\])*"|(-?)0[xX]([0-9a-fA-F]+)/g, function (match, sign, digits) {
+                    return typeof digits === 'string' ? sign + parseInt(digits, 16) : match;
+                });
+                if (converted === source) throw error;
+                return nativeParse(converted, reviver);
+            }
+        };
+    })(JSON.parse);`, context);
     if (!strict) return;
     // Number's ES2015 constants are non-configurable, so deletion cannot hide them.
     runInContext(`(function (NativeNumber, omitted) {

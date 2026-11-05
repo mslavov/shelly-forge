@@ -12,7 +12,8 @@ import { register as rpc } from './rpc.js';
 import { register as evaluate } from './eval.js';
 import { register as discover } from './discover.js';
 import { register as skills } from './skills.js';
+import { register as emulate } from './emulate.js';
 
 export const ALL_COMMANDS: ReadonlyArray<(program: Command) => void> = [
-    init, create, build, check, deploy, dev, status, logs, debug, rpc, evaluate, discover, skills,
+    init, create, build, check, deploy, dev, status, logs, debug, rpc, evaluate, discover, skills, emulate,
 ];

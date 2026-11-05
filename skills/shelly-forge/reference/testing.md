@@ -1,4 +1,4 @@
-# Simulator tests
+# Local tests
 
 Use `shelly-forge/testing` from Node-side Vitest tests, not device code. The
 template already separates `tsconfig.json` for device scripts from
@@ -7,10 +7,29 @@ configuration excludes them. Run `npm test` and `npm run typecheck`.
 Keep `moduleDetection: "force"` in both configurations. Test and device files do
 not need an `export {}` marker just to avoid sharing a global scope.
 
-Each TypeScript block below is a complete test file for an initialized project.
+Each TypeScript block in the simulator examples below is a complete test file for an initialized project.
 Save it at the path above the block. The first uses the template's existing
 `src/example/hello.ts`; the others load small scripts from strings. No example
 contacts a device, MQTT broker, or HTTP server.
+
+## Choose the test level
+
+Use `shelly-forge/testing` for isolated script behavior with virtual time and
+injected inputs. Use `shelly-forge emulate` when testing the CLI over real HTTP
+RPC and WebSocket connections without hardware. Start it in a separate terminal,
+set `DEVICE_HOSTNAME=127.0.0.1:8080` in the project, then use the normal CLI
+commands. See the [emulator reference](cli.md#emulate) for authentication, RPC
+coverage, logs, and `startEmulator` from `shelly-forge/emulator` in Node-side tests.
+
+The emulator shares switch and KVS state across scripts and advances their
+engines in real time. Both local tools use Node `vm`, not the device engine.
+Memory, CPU, timing, and engine quirks differ; local passes do not replace
+hardware verification. Only run scripts you trust.
+
+For the repository's end-to-end emulator tests and opt-in hardware suite, see
+[CONTRIBUTING.md](../../../CONTRIBUTING.md). `npm run test:device` requires
+`SHELLY_E2E_HOST` and accepts `SHELLY_E2E_PASSWORD`. The regular suite never contacts
+real devices.
 
 ## Load the real source and advance time
 

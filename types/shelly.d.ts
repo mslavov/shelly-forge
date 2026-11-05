@@ -328,12 +328,22 @@ declare namespace BLE {
       | [event: typeof SCAN_RESULT, result: ScanResult]
       | [event: typeof SCAN_START | typeof SCAN_STOP, result: null | undefined];
     type ScanCallback<UserData = undefined> = (...args: [...ScanEvent, userdata: UserData]) => void;
+    /** TypeScript narrows rest-tuple callbacks only at full arity, so shorter callbacks get plain parameters. */
+    type LooseScanCallback<UserData = undefined> = (event: ScanEvent[0], result: ScanResult | null | undefined, userdata: UserData) => void;
 
     function subscribe<UserData = undefined>(callback: ScanCallback<UserData> | null, ...userdata: ShellyUserDataArgs<UserData>): void;
+    function subscribe<UserData = undefined>(callback: LooseScanCallback<UserData> | null, ...userdata: ShellyUserDataArgs<UserData>): void;
     function start<UserData = undefined>(options: ScanOptions, callback?: ScanCallback<UserData>, ...userdata: ShellyUserDataArgs<UserData>): ScanOptions | null;
+    function start<UserData = undefined>(options: ScanOptions, callback?: LooseScanCallback<UserData>, ...userdata: ShellyUserDataArgs<UserData>): ScanOptions | null;
     function stop(): boolean;
     function isRunning(): boolean;
     function getScanOptions(): ScanOptions | null;
+
+    /** Capitalized names used by earlier firmware and Shelly's published script examples. */
+    const Subscribe: typeof subscribe;
+    const Start: typeof start;
+    const Stop: typeof stop;
+    const GetScanOptions: typeof getScanOptions;
   }
 
   namespace GAP {
@@ -354,6 +364,12 @@ declare namespace BLE {
     function parseManufacturerData(data: string): Record<number, string> | null;
     function hasService(data: string, uuid: string): boolean;
     function parseServiceData(data: string, uuid: string): string | null;
+
+    /** Capitalized names used by earlier firmware and Shelly's published script examples. */
+    const ParseName: typeof parseName;
+    const ParseManufacturerData: typeof parseManufacturerData;
+    const HasService: typeof hasService;
+    const ParseServiceData: typeof parseServiceData;
   }
 }
 

@@ -118,14 +118,12 @@ Shelly.call('HTTP.Request', { method: 'GET', url: 'http://example.com', body: 'd
 Shelly.call('HTTP.POST', { url: 'http://example.com' });
 // @ts-expect-error Timer information is requested for one handle.
 Timer.getInfo();
-// @ts-expect-error BLE GAP helper names are case sensitive.
-BLE.GAP.HasService('', '181a');
-// @ts-expect-error BLE GAP helper names are case sensitive.
-BLE.GAP.ParseServiceData('', '181a');
 // @ts-expect-error parseName takes one advertising data string.
 BLE.GAP.parseName('', '');
-// @ts-expect-error The current BLE API uses lowercase scanner methods.
-BLE.Scanner.Start({});
+// @ts-expect-error Scanner options must be an object.
+BLE.Scanner.Start('all');
+// @ts-expect-error A two-argument scan callback receives null on start and stop events.
+BLE.Scanner.subscribe(function (event, result) { console.log(result.addr); });
 // @ts-expect-error A callback that requires user data must receive it.
 Timer.set(1000, false, function (data: { value: string }) { print(data.value); });
 // @ts-expect-error An explicit user-data type must not make the argument optional.

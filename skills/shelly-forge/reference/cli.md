@@ -32,6 +32,7 @@ Commands:
   eval <selector> <code>                Evaluate code in a running script
   discover [options]                    Discover Shelly devices on the network
   skills [options] <action> [names...]  Install or list bundled agent skills
+  emulate [options]                     Run a local Shelly device emulator
 ```
 
 Use `--json` for automation. Results go to stdout; progress and diagnostics go to stderr. `--quiet` hides progress, not errors. Project directory precedence is `--cwd`, then `CURRENT_WORKING_DIRECTORY`, then the process working directory. The CLI loads that directory's `.env`; existing environment values win.
@@ -318,6 +319,165 @@ Options:
 
 `install` accepts zero or more bundled skill names; no names installs all. It writes `.agents/skills/<name>` and a `.claude/skills/<name>` link, or a copy when linking fails. Managed skills carry `.shelly-forge-version`. Existing unmanaged directories are skipped unless `--force` is explicit. `list` accepts neither names nor `--force` and reports bundled/installed versions and whether each install is managed.
 
+## emulate
+
+```text
+Usage: shelly-forge emulate [options]
+
+Run a local Shelly device emulator
+
+Options:
+  --port <n>           Listen on this port, or 0 for a free port (default: 8080)
+  --bind <address>     Listen on this address (default: "127.0.0.1")
+  --model <model>      Device model identifier
+  --switches <n>       Number of switch components, from 0 to 4 (default: 1)
+  --kvs <file>         Initial KVS values as a JSON object of strings
+  --components <file>  Initial component status and config as a JSON object
+  --mdns               Advertise the emulator through multicast DNS
+  -h, --help           display help for command
+```
+
+Runs a local device server for development, debugging, and end-to-end CLI tests
+without hardware. No project configuration is required to start it. In a project,
+set `DEVICE_HOSTNAME=127.0.0.1:8080` in `.env` to use the default listener. Keep the
+host as `host:port`, not a URL. Commands such as `deploy`, `status`, `logs`, `rpc`,
+`eval`, and `dev` then use the emulator through the same clients as a device.
+
+The port must be an integer from 0 to 65535; 0 selects a free port. `--switches`
+accepts integers from 0 to 4. `--kvs` reads a JSON object of string values, with
+its path relative to the project directory. `--model` changes the reported model
+identifier, not the simulated capabilities. `--mdns` advertises Shelly and HTTP
+services for `discover`. It is off by default and requires a non-loopback bind,
+such as `--bind 0.0.0.0`, with a nonempty server password. Using `--mdns` on
+loopback returns `USAGE`, exit 2.
+
+`--components` reads a project-relative JSON file such as
+`{"temperature:0":{"status":{"tC":21.5},"config":{"name":"Room"}}}`;
+keys must match `/^[a-z][a-z0-9]*(?::(?:0|[1-9]\d*))?$/`, and each entry may
+contain only optional `status` and `config` JSON objects.
+Unreadable files, invalid JSON, arrays, nulls, scalars, invalid keys, and invalid
+entries return `USAGE`, exit 2, before the server starts.
+
+Set `SHELLY_EMULATOR_PASSWORD` in the emulator process environment or project
+`.env` to enable SHA-256 digest authentication as `admin`. Set the client project's
+`SHELLY_PASSWORD` to the same value, or use its script-specific `password` field.
+The emulator does not read `SHELLY_PASSWORD` as its server password. An empty
+`SHELLY_EMULATOR_PASSWORD` means no password. Passwords are not CLI arguments and
+are not logged. Keep the default loopback binding for local work. A non-loopback
+bind without a nonempty server password returns `USAGE`, exit 2. Do not expose the
+emulator to untrusted clients.
+
+The server rejects HTTP requests and WebSocket upgrades with an `Origin` header.
+On loopback, it also rejects `Host` headers other than `localhost`, `127.0.0.1`,
+or `[::1]`, with an optional port. These checks prevent web pages from driving the
+local emulator.
+
+Ctrl+C closes the server, stops scripts, and exits 0. An occupied port returns
+`USAGE`, exit 2; choose another port or `--port 0`. State is in memory and is lost
+when the server closes. `--kvs` supplies initial values, not a persistence file.
+With `--json`, stdout starts with one ready event, then a result envelope on exit.
+Script output and crashes go to stderr as `[emulator] <data>`. `--verbose` also
+logs RPC method names to stderr.
+
+```jsonl
+{"type":"ready","host":"127.0.0.1:8080","auth":false}
+{"ok":true,"exitCode":0,"command":"emulate","summary":"Emulator stopped on 127.0.0.1:8080","data":{"host":"127.0.0.1:8080"}}
+```
+
+### Emulator protocol
+
+- `POST /rpc` accepts RPC frames and returns a result or error envelope.
+  `GET /rpc/<Method>?key=value` returns the result or error directly. Query values
+  use JSON parsing when valid, otherwise they remain strings.
+- `GET /shelly` returns device identity without authentication.
+- WebSocket `/debug/log` streams `{ts, level, data}` frames. `ts` is Unix time in
+  seconds. `print` uses level 2; crashes use level 0 with
+  `script:<id> crashed: <message>`. Debug logging starts disabled. `logs` enables
+  it by default, or use `debug on`. A disabled stream refuses upgrades with 403.
+- When a password is set, RPC and WebSocket upgrades require digest auth. RPC
+  accepts the frame `auth` field or an HTTP `Authorization` header.
+
+The supported methods are:
+
+| Component | Methods |
+| --- | --- |
+| `Shelly` | `GetDeviceInfo`, `GetStatus`, `GetConfig`, `ListMethods`, `Reboot` |
+| `Sys` | `GetStatus`, `GetConfig`, `SetConfig` for `debug.websocket.enable` |
+| `Switch` | `GetStatus`, `Set`, `Toggle` |
+| `KVS` | `Set`, `Get`, `GetMany`, `List`, `Delete` |
+| `Script` | `List`, `Create`, `Delete`, `GetConfig`, `SetConfig`, `PutCode`, `GetCode`, `Start`, `Stop`, `GetStatus`, `Eval` |
+
+Scripts can use `Shelly.call` for the listed methods, including `Shelly.*`,
+`Sys.*`, and `Script.*`. RPC names are case-insensitive; configured components
+also expose `<Component>.GetStatus` and `<Component>.GetConfig`.
+`Shelly.ListMethods` returns the current list. Unknown methods return code 404
+with `No handler for <Method>`. The server allows ten stored scripts. Running
+scripts share switch and KVS state; a callback crash stops only that script.
+`Shelly.Reboot` waits 500 ms, disconnects log sockets, stops scripts, and restarts
+those with `enable: true`. It does not close the server or clear shared state.
+See [the RPC router](../../../src/emulator/rpc.ts) for dispatch and
+[the script manager](../../../src/emulator/scripts.ts) for script behavior.
+
+### Programmatic emulator
+
+Import `startEmulator` from `shelly-forge/emulator` in Node-side code, not device
+scripts. Unlike the CLI, the API defaults to port 0. Always close the server in
+cleanup. This example starts a loopback listener, reads its identity, and closes:
+
+```ts
+import { startEmulator } from 'shelly-forge/emulator';
+
+const emulator = await startEmulator({ switches: 1 });
+try {
+  const response = await fetch(`http://${emulator.host}/shelly`);
+  if (!response.ok) throw new Error(`Device info failed: ${response.status}`);
+  const deviceInfo = await response.json();
+} finally {
+  await emulator.close();
+}
+```
+
+Options include `port`, `bind`, `password`, `deviceInfo`, `switches`, initial `kvs`
+and `components`, `rpc`, `mdns`, `onLog`, and `onRpc`.
+`components` uses the same key and entry shape as `--components`.
+`rpc` maps method names to handler functions and overrides only script
+`Shelly.call` calls, not HTTP RPC requests.
+`onLog` receives every debug frame even when no
+WebSocket is connected. The returned object has `host`, `setStatus(component,
+delta)`, `emitEvent(component, info)`, `scripts()`, `reboot()`, and idempotent
+`close()`. See [the exported types](../../../src/emulator/index.ts) for signatures
+and logger and mDNS publisher hooks.
+
+Use `emulator.ble.advertise(result)`, `emulator.mqtt.receive(topic, message)`, and
+`emulator.mqtt.setConnected(connected)` to inject BLE advertisements, MQTT
+messages, or connection changes into running scripts.
+`emulator.mqtt.published` retains the last 1000 published messages with their
+`scriptId`, `topic`, `message`, `qos`, and `retain` fields.
+Call `emulator.advance(ms)` with a finite nonnegative integer to advance shared
+device and script time through due callbacks and timers in chronological order
+without waiting; real-time ticking continues afterward.
+Each script has a limit of 1000 timer callbacks per engine advance and 1000 RPC
+callbacks or zero-time iterations per simulated timestamp; exceeding either
+limit crashes only that script.
+The existing 1000 ms execution timeout applies to each script callback, not the
+entire advance.
+
+The same binding rules apply to the API. A non-loopback `bind` requires a
+nonempty `password`, and `mdns: true` requires a non-loopback bind.
+
+The emulator uses Node `vm`, which is not a security boundary. Only run code you
+trust. Top-level code, each callback, and eval have a 1000 ms synchronous execution
+limit. Exceeding it crashes the script; eval instead returns an error without
+crashing the script. The emulator removes unsupported
+built-ins and shares the simulator's device APIs, but memory, CPU, timing, and
+engine quirks differ. Script memory and CPU fields are zero placeholders, not
+measurements. It does not connect simulated MQTT, HTTP, or BLE APIs to real
+services. Verify behavior on the target model and firmware before relying on it.
+For the repository's emulator suite and opt-in hardware workflow, see
+[CONTRIBUTING.md](../../../CONTRIBUTING.md). The hardware command is
+`npm run test:device`; it requires `SHELLY_E2E_HOST` and accepts
+`SHELLY_E2E_PASSWORD`.
+
 ## Exit codes
 
 These mappings come from `src/core/errors.ts`. A command normally returns 0 on
@@ -345,7 +505,7 @@ A thrown error returns `{ "ok": false, "exitCode": 2, "command": "...", "error":
 2 for a usage failure; other errors use the table above. A `status` result can
 contain `data` with `ok: false` and exit 4 or 5. Record the process exit code too.
 
-`logs` and `dev` write newline-delimited JSON events, then a final envelope. Parse
+`logs`, `dev`, and `emulate` write newline-delimited JSON events, then a final envelope. Parse
 each line separately rather than treating all stdout as one JSON document.
 Events have a `type`, not the result envelope's `ok` and `exitCode` fields.
 Progress remains on stderr; it is not part of the JSON stream.

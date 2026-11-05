@@ -4,8 +4,9 @@ description: >
   Create, test, build, deploy, and debug TypeScript automations on Shelly devices
   with the shelly-forge CLI. Use for deploy verification, rollback, logs, status,
   device not responding, script crashed, configuration errors, or unit test a
-  Shelly script with shelly-forge/testing. Includes bounded agent workflows,
-  JSON output, simulator examples, and recovery commands.
+  Shelly script with shelly-forge/testing, or develop without hardware with
+  shelly-forge emulate. Includes bounded agent workflows, JSON output,
+  simulator examples, and recovery commands.
 ---
 
 # Shelly project workflow
@@ -83,6 +84,23 @@ another entry does not block them, but resolvable entries still participate in
 duplicate-target checks. Both commands reject invalid `--verify-timeout` values
 with `USAGE`, exit 2, before building or watching. See the
 [CLI reference](reference/cli.md#deploy) for the accepted range.
+
+## Develop without hardware
+
+Run `npx shelly-forge emulate` in a separate terminal. Set the project's
+`DEVICE_HOSTNAME=127.0.0.1:8080` before using the normal deployment and debugging
+commands. Keep the default loopback binding. Ctrl+C closes the server and discards
+its in-memory state. For authentication tests, set `SHELLY_EMULATOR_PASSWORD` in
+the server environment and the same value as `SHELLY_PASSWORD` for the client.
+Never put passwords in command arguments or public build values.
+
+Use `shelly-forge/testing` for virtual-clock unit tests and the emulator for real
+HTTP RPC and WebSocket CLI workflows. The emulator runs scripts in Node `vm`
+with unsupported built-ins removed. Node `vm` is not a security boundary; only
+run code you trust. It does not reproduce device memory, CPU,
+timing, or engine quirks; verify on the intended hardware before deployment.
+See [emulator options and API](reference/cli.md#emulate) and
+[local testing choices](reference/testing.md#choose-the-test-level).
 
 ## Agent execution rules
 

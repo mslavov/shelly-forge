@@ -52,6 +52,19 @@ first argument is a function expression or an identifier. It skips free
 methods declared on known objects. Other excluded array methods rely on type
 checking. `Object.keys` is not an unsupported array call.
 
+### Reproduce without hardware
+
+Start `npx shelly-forge emulate` and set `DEVICE_HOSTNAME=127.0.0.1:8080` in the
+client project before following the deployment and log steps below. This runs
+normal CLI requests against a local server, not the physical device. Use
+`shelly-forge/testing` when a virtual clock or injected failures make the problem
+easier to isolate. See [local testing choices](testing.md#choose-the-test-level)
+and [emulator options](cli.md#emulate).
+
+The emulator's script memory and CPU fields are zero placeholders. Do not use
+them to diagnose hardware resource use. Node `vm` timing and engine behavior
+differ from firmware; confirm any fix on the target device with authorization.
+
 ## 2. Inspect deployment verification
 
 ```sh

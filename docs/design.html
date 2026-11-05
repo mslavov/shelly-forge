@@ -138,6 +138,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
   <a href="#pipeline">Source to device</a>
   <a href="#checks">Where failures are caught</a>
   <a href="#testing">Testing without hardware</a>
+  <a href="#emulator">Local device emulator</a>
   <a href="#loop">Deploy and debug</a>
   <a href="#agents">Working with agents</a>
   <a href="#project">Project and configuration</a>
@@ -147,7 +148,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
   <header id="overview">
     <p class="eyebrow">Design / version 0.4.0</p>
     <h1>Shelly scripts, checked before upload and verified after start.</h1>
-    <p class="subtitle">shelly-forge builds TypeScript automations for Shelly devices with scripting support, checks their generated JavaScript, provides a local test runtime, and verifies startup after deployment.</p>
+    <p class="subtitle">shelly-forge builds TypeScript automations for Shelly devices with scripting support, checks their generated JavaScript, provides a local test runtime and device emulator, and verifies startup after deployment.</p>
     <p class="lede">The CLI runs on Node.js 22.12 or newer. The automation runs on the device, where JavaScript support and available resources are different. Local checks reduce avoidable failures; the target model and firmware still need testing.</p>
   </header>
 
@@ -299,6 +300,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
           <tr><td>Editor and project type check</td><td>Invalid types, missing declared APIs, and unsupported array methods when using the device library.</td><td>Types do not measure resource use or execute callbacks.</td></tr>
           <tr><td>Artifact checks</td><td>Known hazards left in the final JavaScript, including unsupported free globals and oversized code.</td><td>Rules are not a complete implementation of the device interpreter. Some checks are heuristics.</td></tr>
           <tr><td>Simulator tests</td><td>Behavior under supplied inputs, virtual time, RPC outcomes, and enforced resource limits.</td><td>The simulator is Node's VM, not device firmware. It does not reproduce CPU, memory, or radio behavior.</td></tr>
+          <tr><td>Emulator end-to-end tests</td><td>CLI builds, deployment, logs, authentication, and recovery over local HTTP and WebSocket connections.</td><td>The emulator shares the simulator's Node VM engine. Its timing and resource fields do not measure device behavior.</td></tr>
           <tr><td>Deploy verification</td><td>A newly started script that is not running or reports errors during the verification window.</td><td>A healthy window does not prove long-running correctness. Cached skips do not repeat this check.</td></tr>
         </tbody>
       </table>
@@ -398,6 +400,61 @@ test('persists the first counter value', async () =&gt; {
     <p>The simulator enforces 5 timers, 5 event handlers, 5 status handlers, 5 pending RPC calls, 10 MQTT subscriptions, and 5 HTTP endpoints. KVS allows 50 keys, with at most 42 UTF-8 bytes per key and 253 bytes per value. Non-string values use their serialized JSON size.</p>
     <div class="note">The simulator is not a security boundary for untrusted scripts. Unhandled RPC methods return error <code>-114</code> with <code>method not simulated: &lt;name&gt;</code>; supply a handler when a test needs them. BLE GAP parsing is not simulated, HTTP responses must be sent synchronously, and virtual component handles return <code>null</code>. Node's string behavior and execution engine are not the device interpreter.</div>
     <p>Read the <a href="../skills/shelly-forge/reference/testing.md">testing guide</a> for fixtures and RPC failure examples. To test the exact minified output, build first and load its file with <code>loadArtifact</code>.</p>
+  </section>
+
+  <section class="section" id="emulator">
+    <h2>Local device emulator</h2>
+    <p class="lede"><code>shelly-forge emulate</code> runs a local device server for development, debugging, and end-to-end CLI tests in CI. The existing device clients call its HTTP RPC and WebSocket endpoints without a separate emulator client.</p>
+    <figure id="emulator-figure">
+      <div class="diagram-shell" tabindex="0" role="region" aria-label="Emulator architecture diagram, scroll horizontally on smaller screens">
+        <svg viewBox="0 0 1040 448" role="img" aria-labelledby="emulator-title emulator-desc">
+          <title id="emulator-title">CLI requests and logs through the local emulator</title>
+          <desc id="emulator-desc">The CLI sends requests to the RPC router through /rpc. The router manages script engines and shared device state. Script engines also use that state. Print output and crashes pass through the log broadcaster to the CLI over /debug/log. Each script engine runs in Node vm, not the device interpreter.</desc>
+          <rect width="1040" height="448" class="bg" />
+          <rect x="256" y="56" width="760" height="368" rx="8" class="b-opt" />
+          <text x="280" y="84" class="t-head">EMULATOR / 127.0.0.1:8080</text>
+          <path d="M200 184 H288" class="ln link" />
+          <path d="M504 184 H552" class="ln" />
+          <path d="M396 128 V104 H896 V128" class="ln" />
+          <path d="M760 184 H808" class="ln" />
+          <path d="M656 240 V300" class="ln acc" />
+          <path d="M552 344 H224 V228 H200" class="ln link" />
+          <text x="236" y="168" class="t-sub" text-anchor="middle">/rpc</text>
+          <text x="700" y="96" class="t-lbl" text-anchor="middle">DEVICE CALLS</text>
+          <text x="672" y="276" class="t-lbl">PRINT / CRASH</text>
+          <text x="384" y="328" class="t-sub" text-anchor="middle">WS /debug/log</text>
+          <rect x="24" y="144" width="176" height="112" rx="6" class="b-user" />
+          <text x="112" y="176" class="t-name" text-anchor="middle">Shelly Forge CLI</text>
+          <text x="112" y="200" class="t-sub" text-anchor="middle">deploy / rpc / eval</text>
+          <text x="112" y="224" class="t-sub" text-anchor="middle">status / logs / dev</text>
+          <rect x="288" y="128" width="216" height="112" rx="6" class="b-focal" />
+          <text x="396" y="160" class="t-name" text-anchor="middle">RPC router</text>
+          <text x="396" y="184" class="t-sub" text-anchor="middle">Script.* lifecycle</text>
+          <text x="396" y="208" class="t-sub" text-anchor="middle">Shelly / Sys / Switch / KVS</text>
+          <rect x="552" y="128" width="208" height="112" rx="6" class="b-node" />
+          <text x="656" y="160" class="t-name" text-anchor="middle">Script engines</text>
+          <text x="656" y="184" class="t-sub" text-anchor="middle">one Node vm per script</text>
+          <text x="656" y="208" class="t-sub" text-anchor="middle">real-time clock ticks</text>
+          <rect x="808" y="128" width="176" height="224" rx="6" class="b-store" />
+          <text x="896" y="176" class="t-name" text-anchor="middle">Shared device state</text>
+          <text x="896" y="208" class="t-sub" text-anchor="middle">switch components</text>
+          <text x="896" y="232" class="t-sub" text-anchor="middle">KVS values</text>
+          <text x="896" y="256" class="t-sub" text-anchor="middle">status / events</text>
+          <rect x="552" y="300" width="208" height="88" rx="6" class="b-node" />
+          <text x="656" y="332" class="t-name" text-anchor="middle">Log broadcaster</text>
+          <text x="656" y="356" class="t-sub" text-anchor="middle">{ts, level, data}</text>
+          <text x="280" y="404" class="t-sub">src/emulator uses the script engine and DeviceState in src/testing</text>
+        </svg>
+      </div>
+      <figcaption>The server shares switch and KVS state across running scripts. A callback crash stops only its script. Debug logging starts disabled; <code>logs</code> enables it by default. Optional mDNS requires a non-loopback bind and a password.</figcaption>
+    </figure>
+    <p>Start <code>npx shelly-forge emulate</code> and set <code>DEVICE_HOSTNAME=127.0.0.1:8080</code> in the client project's <code>.env</code>. The default binding is loopback. <code>--port 0</code> selects a free port. Set <code>SHELLY_EMULATOR_PASSWORD</code> for server authentication and the same value as <code>SHELLY_PASSWORD</code> for the client. Ctrl+C closes the server and discards its in-memory state.</p>
+    <p>A non-loopback bind requires a nonempty server password or exits 2. An empty password means no authentication. <code>--mdns</code> requires a non-loopback bind, such as <code>--bind 0.0.0.0</code>; it exits 2 on loopback. The server rejects requests with an <code>Origin</code> header and non-local <code>Host</code> headers on loopback.</p>
+    <p>Scripts can use <code>Shelly.call</code> for the emulator's <code>Shelly.*</code>, <code>Sys.*</code>, and <code>Script.*</code> methods. Unknown methods return 404 <code>No handler for &lt;Method&gt;</code>.</p>
+    <p>Node-side tests can import <code>startEmulator</code> from <code>shelly-forge/emulator</code>, then call <code>close()</code> in cleanup. The API defaults to a free port and exposes status and event injection. See the <a href="../skills/shelly-forge/reference/cli.md#emulate">emulator reference</a> for options, supported RPC methods, log frames, and an API example.</p>
+    <div class="note">Node <code>vm</code> is not a security boundary. Only run code you trust. Top-level code, each callback, and eval have a 1000 ms synchronous execution limit. A timeout crashes the script; eval instead returns an error. Memory, CPU, timing, and engine quirks differ from hardware. Script resource fields are zero placeholders. Keep the emulator local and verify behavior on the target hardware.</div>
+    <p>See <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a> for the regular emulator end-to-end suite and the opt-in <code>npm run test:device</code> workflow with <code>SHELLY_E2E_HOST</code> and optional <code>SHELLY_E2E_PASSWORD</code>.</p>
+    <p class="src">Implementation: <a href="../src/emulator/index.ts">public API</a>, <a href="../src/emulator/server.ts">server</a>, <a href="../src/emulator/rpc.ts">RPC router</a>, <a href="../src/testing/engine.ts">script engine</a>, <a href="../src/testing/device-state.ts">shared device state</a>.</p>
   </section>
 
   <section class="section" id="loop">

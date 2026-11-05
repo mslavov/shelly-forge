@@ -17,6 +17,14 @@ export class VirtualClock {
 
     now(): number { return this.time; }
 
+    nextScheduledTime(): number | undefined {
+        let next: number | undefined;
+        for (const entry of this.scheduled.values()) {
+            if (next === undefined || entry.at < next) next = entry.at;
+        }
+        return next;
+    }
+
     schedule(delay: number, callback: () => void): number {
         if (!Number.isFinite(delay) || delay < 0) throw new Error('delay must be a finite non-negative number');
         const handle = this.nextId++;
