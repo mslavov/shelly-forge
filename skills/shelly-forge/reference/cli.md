@@ -46,6 +46,18 @@ Use `solution/script`, `solution-script`, a unique script name, or a unique `tar
 
 ## init
 
+For agent-led setup before a project exists, install both skills in the current
+workspace with the [skills CLI](https://github.com/vercel-labs/skills), then ask
+the agent to run the project workflow:
+
+```sh
+npx skills add mslavov/shelly-forge --skill shelly-forge shelly-scripting
+```
+
+The skills installer requires Node.js 22.20 or newer. Forge requires 22.12 or
+newer. Choose your agent when prompted, or add `--global` for use across projects.
+This external installer is separate from Forge's bundled `skills install` command.
+
 ```text
 Usage: shelly-forge init [options] [name]
 

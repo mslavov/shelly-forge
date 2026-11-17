@@ -4,7 +4,32 @@
 
 Shelly Forge is a TypeScript CLI for building, testing, and deploying scripts to Shelly devices with scripting support. It checks device code, provides a local runtime simulator and device emulator, and verifies scripts after deployment.
 
-## Install and start a project
+## Start with your coding agent
+
+Install the skills first. Run this in the workspace where you will use your coding agent:
+
+```sh
+npx skills add mslavov/shelly-forge --skill shelly-forge shelly-scripting
+```
+
+Choose your coding agent when prompted. The [skills CLI](https://github.com/vercel-labs/skills) installs into the current workspace by default. Add `--global` to use the skills across projects. Use Node.js 22.20 or newer for this installer. Shelly Forge itself requires Node.js 22.12 or newer.
+
+Open your agent in that workspace and describe the automation you want. For example:
+
+```text
+Use the shelly-forge and shelly-scripting skills to create a project called
+my-home. Add a hallway lighting script and simulator tests. Ask me how the
+automation should behave, then install dependencies, implement it, run the
+tests and type checks, and check the device artifact. Use the local emulator
+if needed. Stop before changing a real device and ask me to confirm the target
+and deployment.
+```
+
+The agent can handle project setup, code, tests, checks, and debugging through the CLI. You provide the automation requirements and approve changes to real devices. Keep passwords in the local `.env`, not in chat or public build values. If your agent does not discover the new skills, restart its session.
+
+See the [framework site](https://mslavov.github.io/shelly-forge/) for a shorter introduction and the [architecture page](https://mslavov.github.io/shelly-forge/design.html) for how the tools fit together.
+
+## Use the CLI directly
 
 Use Node.js 22.12 or newer. Run through `npx`, or install the CLI with `npm install --global shelly-forge`.
 
@@ -175,17 +200,19 @@ The emulator also runs end-to-end CLI tests in CI. See
 
 ## Agent support
 
-`init` installs two skills by default. Use `shelly-forge init my-home --no-skills` to skip them, or install them later:
+The [skills-first setup](#start-with-your-coding-agent) makes both skills available before a project exists. They cover:
+
+- [shelly-forge](skills/shelly-forge/SKILL.md) for the CLI workflow, tests, deployment, and debugging.
+- [shelly-scripting](skills/shelly-scripting/SKILL.md) for device language constraints, APIs, and automation patterns.
+
+`init` also installs bundled copies in the generated project by default. Use `shelly-forge init my-home --no-skills` to skip them, or install them later:
 
 ```sh
 npx shelly-forge skills install
 npx shelly-forge skills list
 ```
 
-- [shelly-forge](skills/shelly-forge/SKILL.md) covers the CLI workflow, tests, deployment, and debugging.
-- [shelly-scripting](skills/shelly-scripting/SKILL.md) covers device language constraints, APIs, and automation patterns.
-
-Installation writes `.agents/skills/<name>/` with a `.shelly-forge-version` marker and creates `.claude/skills/<name>` as a relative symlink. It copies the skill there if symlinks are unavailable. Existing unmarked skill directories are user-owned and remain untouched unless you pass `shelly-forge skills install --force`.
+The bundled installer writes `.agents/skills/<name>/` with a `.shelly-forge-version` marker and creates `.claude/skills/<name>` as a relative symlink. It copies the skill there if symlinks are unavailable. Existing unmarked skill directories, including skills installed by the skills CLI, are user-owned and remain untouched unless you pass `shelly-forge skills install --force`. Manage skills installed through `npx skills` with that CLI rather than forcing a bundled replacement.
 
 The project template also includes `AGENTS.md` and a `CLAUDE.md` that references it. See the [project design](docs/design.html) for the implementation structure.
 

@@ -60,7 +60,7 @@ function linkTargets(markdown: string): string[] {
 }
 
 function mentionedCommands(markdown: string): string[] {
-    const invocation = /\bshelly-forge[ \t]+(?:(?:--(?:json|verbose|quiet)|-[vq])[ \t]+|--cwd[ \t]+(?:'[^']*'|"[^"]*"|\S+)[ \t]+)*([a-z][a-z-]*)\b/;
+    const invocation = /^[ \t]*(?:npx[ \t]+)?shelly-forge[ \t]+(?:(?:--(?:json|verbose|quiet)|-[vq])[ \t]+|--cwd[ \t]+(?:'[^']*'|"[^"]*"|\S+)[ \t]+)*([a-z][a-z-]*)\b/;
     const fragments = [
         ...Array.from(markdown.matchAll(/(?<!`)`([^`\n]+)`(?!`)/g), match => match[1]),
         ...Array.from(markdown.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm), match => match[1]),
@@ -117,6 +117,7 @@ test('command extraction includes global options but excludes prose, imports, an
         '`shelly-forge --cwd "my project" --quiet status`.',
         '`shelly-forge/testing` and `shelly-forge unknown`.',
         '```sh',
+        'npx skills add mslavov/shelly-forge --skill shelly-forge shelly-scripting',
         'npx shelly-forge --json skills install shelly-forge shelly-scripting',
         '```',
     ].join('\n');

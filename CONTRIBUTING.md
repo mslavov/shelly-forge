@@ -111,6 +111,20 @@ The publish job uses Node.js 24, npm 12.2.1, and `id-token: write` for OIDC auth
 
 Complete the first publish within two days of creating the trusted publisher. Recreate the publisher if it expires unused. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) for setup requirements.
 
+## Framework site
+
+The [public site](https://mslavov.github.io/shelly-forge/) is static HTML, CSS, and JavaScript in `docs/`. It needs no build or npm dependencies. `docs/index.html` is the skills-first introduction; `docs/design.html` explains the architecture. Keep installation commands, Node.js requirements, and safety guidance aligned with the README and skills. Link to the CLI and testing references rather than copying their full contents.
+
+Preview it from the repository root:
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:4173/docs/`. Check desktop and mobile layouts, keyboard navigation, copy buttons and their failure feedback, and links on both pages. Use relative links for site assets and absolute GitHub URLs for repository files that Pages does not host.
+
+The [Pages workflow](.github/workflows/pages.yml) uploads only `docs/` and deploys it on relevant pushes to `main` or a manual dispatch. It is separate from npm publishing. In the repository's Settings, Pages, set the source to GitHub Actions. The deployment uses the `github-pages` environment. No custom domain or secrets are required.
+
 ## License
 
 Contributions use the repository's [MIT license](LICENSE).

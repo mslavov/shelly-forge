@@ -17,10 +17,16 @@ resource limits, and automation patterns. The MCP server was removed in 0.4.0.
 
 ## Start with the project and target
 
-Use Node.js 22.12 or newer. Inspect `package.json`, `solutions.config.json`, the
+Use Node.js 22.12 or newer. If no project exists, ask for the project name and
+automation requirements, then handle scaffolding, dependency installation, code,
+tests, and checks. Do not make the user run the setup commands themselves.
+Use the simulator or local emulator before requesting a real-device deployment.
+
+For an existing project, inspect `package.json`, `solutions.config.json`, the
 selected source and test, and existing changes before editing. Work from the
-project root or pass `--cwd <dir>`. Confirm the selected device before a deploy
-or an RPC that changes state. Deployment stops, replaces, and starts that script.
+project root or pass `--cwd <dir>`. Confirm the selected device and authorization
+before a deploy or an RPC that changes state. Deployment stops, replaces, and
+starts that script.
 
 For a new project, run:
 

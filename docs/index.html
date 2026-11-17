@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build, test, and deploy TypeScript scripts for Shelly devices with your coding agent. Install two skills and describe your automation.">
+  <meta name="theme-color" content="#f6f7f2">
+  <meta property="og:title" content="Shelly Forge | Device scripts, built with your agent">
+  <meta property="og:description" content="Install the skills. Describe your automation. Test locally before you deploy to a Shelly device.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mslavov.github.io/shelly-forge/">
+  <title>Shelly Forge | Device scripts, built with your agent</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/site.css">
+  <script src="./assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header wrap">
+    <a class="brand" href="./index.html" aria-label="Shelly Forge home">
+      <img src="./assets/mark.svg" width="32" height="32" alt="">
+      <span>shelly<span class="brand-light">forge</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#workflow">Workflow</a>
+      <a href="#testing">Testing</a>
+      <a href="./design.html">Architecture</a>
+      <a class="github-link" href="https://github.com/mslavov/shelly-forge">GitHub <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> TypeScript for Shelly devices</p>
+        <h1 id="hero-title">Shelly scripts.<br><span>Built with<br>your agent.</span></h1>
+        <p class="intro">Describe what your home should do. Your coding agent writes the script, tests it locally, and checks it before you approve deployment.</p>
+        <a class="text-link" href="#workflow">See the workflow <span aria-hidden="true">↓</span></a>
+      </div>
+
+      <div class="install-card" id="get-started">
+        <div class="terminal-bar"><span class="terminal-dot" aria-hidden="true"></span><span>Start here / your terminal</span><span class="step-label">01</span></div>
+        <div class="install-body">
+          <h2>Give your agent the skills.</h2>
+          <p>Run in your workspace. Choose your coding agent when prompted.</p>
+          <pre class="install-command"><code id="install-command">npx skills add mslavov/shelly-forge --skill shelly-forge shelly-scripting</code></pre>
+          <button class="copy-button primary-button" type="button" data-copy="install-command" aria-describedby="install-status" hidden><span>Copy install command</span><span aria-hidden="true">⧉</span></button>
+          <p class="copy-status" id="install-status" role="status" aria-live="polite"></p>
+          <div class="installed-skills">
+            <div><span class="skill-symbol" aria-hidden="true">&gt;_</span><div><strong>shelly-forge</strong><span>Project setup, tests, deploys, debugging</span></div></div>
+            <div><span class="skill-symbol" aria-hidden="true">{ }</span><div><strong>shelly-scripting</strong><span>Device APIs, language rules, runtime limits</span></div></div>
+          </div>
+        </div>
+        <p class="install-footnote">Node.js 22.20+ for the skills installer.<br>Workspace install by default. Add <code>--global</code> for all projects.</p>
+      </div>
+    </section>
+
+    <div class="facts wrap" role="group" aria-label="Framework essentials">
+      <span>TypeScript source <span aria-hidden="true">/</span> ES5 device code</span>
+      <span>Local simulator + device emulator</span>
+      <span>Open source <span aria-hidden="true">/</span> MIT</span>
+    </div>
+
+    <section class="workflow-section wrap section" id="workflow" aria-labelledby="workflow-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">02 / Your coding agent</p><h2 id="workflow-title">Tell it what you<br> want to automate.</h2></div>
+        <p>You bring the requirements. The skills give your agent the CLI workflow and the device rules. It handles setup and implementation.</p>
+      </div>
+      <div class="prompt-panel">
+        <div class="panel-heading"><span class="mono-label">An example first request</span><button class="copy-button small-button" type="button" data-copy="agent-prompt" aria-describedby="prompt-status" hidden>Copy prompt</button></div>
+        <p class="agent-prompt" id="agent-prompt">Use the shelly-forge and shelly-scripting skills to create a project called my-home. Add a hallway lighting script and simulator tests. Ask me how the automation should behave, then install dependencies, implement it, run the tests and type checks, and check the device artifact. Use the local emulator if needed. Stop before changing a real device and ask me to confirm the target and deployment.</p>
+        <p class="copy-status" id="prompt-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="workflow-notes">
+        <p><span class="note-number">01</span>Install the skills before creating a project. Open your agent in the same workspace. Restart its session if it does not discover them.</p>
+        <p><span class="note-number">02</span>Keep passwords in your local <code>.env</code>, not in chat. Your agent should ask before any real-device change.</p>
+      </div>
+      <p class="manual-link">Prefer the terminal? Forge works without an agent. <a href="https://github.com/mslavov/shelly-forge#use-the-cli-directly">Follow the direct CLI setup <span aria-hidden="true">↗</span></a></p>
+    </section>
+
+    <section class="testing-section" id="testing" aria-labelledby="testing-title">
+      <div class="wrap testing-grid">
+        <div class="testing-copy">
+          <p class="eyebrow">Local first</p>
+          <h2 id="testing-title">Test without<br> the hardware.</h2>
+          <p>The simulator runs your TypeScript with device APIs and a virtual clock. Advance timers, inject events, and inspect KVS values without a device on your desk.</p>
+          <div class="test-level"><span class="level-tag">Unit</span><div><h3>Script behavior</h3><p>Use <code>shelly-forge/testing</code> in Vitest for timers, MQTT, HTTP, BLE, and failure cases.</p></div></div>
+          <div class="test-level"><span class="level-tag">CLI</span><div><h3>A local device server</h3><p>Run <code>npx shelly-forge emulate</code>. Deploy and debug through real HTTP RPC and WebSocket logs on loopback.</p></div></div>
+          <a class="text-link" href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/testing.md">Read the testing guide <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="code-card">
+          <div class="terminal-bar"><span class="terminal-dot" aria-hidden="true"></span><span>hello.test.ts</span><span class="code-language">Vitest</span></div>
+          <pre tabindex="0" role="region" aria-label="Simulator test example"><code><span class="syntax-keyword">import</span> { fileURLToPath } <span class="syntax-keyword">from</span> <span class="syntax-string">'node:url'</span>;
+<span class="syntax-keyword">import</span> { expect, test } <span class="syntax-keyword">from</span> <span class="syntax-string">'vitest'</span>;
+<span class="syntax-keyword">import</span> { createShellyRuntime }
+  <span class="syntax-keyword">from</span> <span class="syntax-string">'shelly-forge/testing'</span>;
+
+test(<span class="syntax-string">'the starter saves its counter'</span>, <span class="syntax-keyword">async</span> () =&gt; {
+  <span class="syntax-keyword">const</span> runtime = createShellyRuntime();
+  <span class="syntax-keyword">const</span> script = fileURLToPath(
+    <span class="syntax-keyword">new</span> URL(<span class="syntax-string">'./hello.ts'</span>, <span class="syntax-keyword">import</span>.meta.url)
+  );
+  <span class="syntax-keyword">await</span> runtime.loadScript(script, {
+    env: { SHELLY_PUBLIC_GREETING: <span class="syntax-string">''</span> }
+  });
+
+  <span class="code-highlight">runtime.advance(60000);</span>
+
+  expect(runtime.kvs.get(<span class="syntax-string">'example.hello.count'</span>))
+    .toBe(<span class="syntax-string">'1'</span>);
+});</code></pre>
+          <div class="code-caption"><span aria-hidden="true">↳</span> The generated starter's first timer, without the wait.</div>
+        </div>
+      </div>
+      <p class="wrap hardware-note">Local tests do not reproduce device memory, CPU, or every firmware behavior. The emulator runs trusted code in Node <code>vm</code>, not a security boundary. Verify on your intended hardware too.</p>
+    </section>
+
+    <section class="architecture-section section wrap" aria-labelledby="architecture-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">03 / With your approval</p><h2 id="architecture-title">Checked code.<br> Confirmed target.</h2></div>
+        <p>Shelly's interpreter is not Node.js. Forge checks for unsupported APIs and device limits, then verifies startup after upload.</p>
+      </div>
+      <ol class="pipeline">
+        <li><span class="pipeline-index">01 / Write</span><h3>TypeScript</h3><p>Device-specific types and bundled local imports.</p><code>src/lighting/hallway.ts</code></li>
+        <li><span class="pipeline-index">02 / Check</span><h3>ES5 artifact</h3><p>Type checks, runtime rules, and a 65535-byte size limit.</p><code>check lighting/hallway</code></li>
+        <li><span class="pipeline-index">03 / Deploy</span><h3>One selected script</h3><p>Upload, configure, and start on the device you approved.</p><code>deploy lighting/hallway</code></li>
+        <li><span class="pipeline-index">04 / Verify</span><h3>Startup status</h3><p>A health window checks for errors. Failed verification attempts rollback when a different last-good artifact exists.</p><code>status lighting/hallway</code></li>
+      </ol>
+      <div class="architecture-footer"><p>Deployment replaces the selected on-device script. Keep verification enabled.</p><a class="text-link" href="./design.html">Explore the architecture <span aria-hidden="true">↗</span></a></div>
+    </section>
+
+    <section class="resources-section wrap section" aria-labelledby="resources-title">
+      <div class="resource-intro"><p class="eyebrow">Keep going</p><h2 id="resources-title">The details,<br>when you need them.</h2><p>Forge requires Node.js 22.12+ and a Shelly device with scripting support. Use local tests before connecting hardware.</p><a class="text-link" href="#get-started">Install the skills <span aria-hidden="true">↑</span></a></div>
+      <div class="resource-links">
+        <a href="https://github.com/mslavov/shelly-forge#readme"><span><strong>Project guide</strong><span>Setup, configuration, and the manual workflow</span></span><span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/cli.md"><span><strong>CLI reference</strong><span>Commands, selectors, JSON output, and recovery</span></span><span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-scripting/SKILL.md"><span><strong>Device scripting</strong><span>Language constraints, APIs, and automation patterns</span></span><span aria-hidden="true">↗</span></a>
+        <a href="./design.html"><span><strong>Architecture</strong><span>The build pipeline, runtime, emulator, and deployment</span></span><span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/mslavov/shelly-forge/blob/main/CONTRIBUTING.md"><span><strong>Contribute</strong><span>Development setup, tests, and releases</span></span><span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap"><span>Shelly Forge <span class="footer-divider" aria-hidden="true">/</span> A TypeScript toolkit for Shelly scripts.</span><div><a href="https://github.com/mslavov/shelly-forge">GitHub</a><a href="https://www.npmjs.com/package/shelly-forge">npm</a><a href="https://github.com/mslavov/shelly-forge/blob/main/LICENSE">MIT license</a></div></footer>
+</body>
+</html>

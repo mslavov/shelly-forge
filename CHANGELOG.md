@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Add a skills-first framework site and architecture page on GitHub Pages, with a separate deployment workflow.
+
+### Changed
+
+- Start README onboarding with `npx skills add` and an example agent request. Keep direct CLI setup as an alternative and require approval before real-device changes.
+
 ## [0.4.0] - 2026-11-05
 
 ### Added

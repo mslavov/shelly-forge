@@ -46,7 +46,7 @@ p { margin: 0 0 16px; }
 ul, ol { margin: 0 0 16px; padding-left: 24px; }
 li { margin: 8px 0; }
 a { color: var(--link); text-underline-offset: 3px; }
-a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+a:focus-visible, pre:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 code { color: var(--ink); font-family: var(--mono); font-size: 0.9em; overflow-wrap: anywhere; }
 pre { margin: 16px 0 24px; padding: 20px; overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; font-size: 13px; line-height: 1.65; }
 pre code { font-size: inherit; overflow-wrap: normal; }
@@ -133,6 +133,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
 </svg>
 <nav class="toc" aria-label="Contents">
   <p class="eyebrow">shelly-forge / 0.4.0</p>
+  <a href="./index.html">Home</a>
   <a href="#overview">Overview</a>
   <a href="#problem">The device is not Node.js</a>
   <a href="#pipeline">Source to device</a>
@@ -185,7 +186,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
         </tbody>
       </table>
     </div>
-    <p class="src">The previous behavior is visible in the pre-0.4.0 build, deploy, logs, and device-upload implementations. Current limits live in <a href="../src/core/runtime-profile.ts"><code>src/core/runtime-profile.ts</code></a>.</p>
+    <p class="src">The previous behavior is visible in the pre-0.4.0 build, deploy, logs, and device-upload implementations. Current limits live in <a href="https://github.com/mslavov/shelly-forge/blob/main/src/core/runtime-profile.ts"><code>src/core/runtime-profile.ts</code></a>.</p>
   </section>
 
   <section class="section" id="pipeline">
@@ -288,7 +289,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
     <p><code>deploy --dry-run</code> builds by default and reports create, update, or skip plans. Its device requests are limited to <code>Script.List</code>. It does not upload, start a script, or prove that a deployment would run.</p>
     <p><code>deploy --no-build</code> validates the artifact, entry source, imported inputs, and public environment hashes against the manifest. Missing or changed inputs report their path. Older manifests without input or public environment hashes require rebuilding. Prefer the default build-then-deploy path.</p>
     <p>Deployment reuses an authenticated RPC client only for the same normalized host and password during upload, verification, and rollback. Entries with different passwords do not share a client. HTTP 429 waits 2,000 ms before retrying, at most twice. Malformed responses include their HTTP status; HTTP 404 adds a hint to check for a Gen2+ device or the wrong host.</p>
-    <p class="src">Implementation: <a href="../src/build/build-project.ts">build pipeline</a>, <a href="../src/build/manifest.ts">manifest validation</a>, <a href="../src/deploy/deployer.ts">deployer</a>, <a href="../src/device/scripts.ts">script RPC operations</a>.</p>
+    <p class="src">Implementation: <a href="https://github.com/mslavov/shelly-forge/blob/main/src/build/build-project.ts">build pipeline</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/build/manifest.ts">manifest validation</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/deploy/deployer.ts">deployer</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/device/scripts.ts">script RPC operations</a>.</p>
   </section>
 
   <section class="section" id="checks">
@@ -306,7 +307,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
       </table>
     </div>
     <h3>Rules on the ES5 bundle</h3>
-    <p>AST rules inspect the unminified ES5 bundle, equal to <code>build --no-minify</code> output. Finding line and column numbers refer to that bundle, even when shipped code is minified. For minified builds and <code>check</code>, text locations include <code>(unminified)</code> and JSON artifact findings include <code>bundle: "unminified"</code>. <code>build --no-minify</code> writes the matching file and omits that marker. AST messages include a short code excerpt because <code>check</code> writes no artifact. Size rules measure shipped code. The default severities below come from <a href="../src/build/artifact-check.ts"><code>artifact-check.ts</code></a>. <code>--strict</code> promotes warnings to errors.</p>
+    <p>AST rules inspect the unminified ES5 bundle, equal to <code>build --no-minify</code> output. Finding line and column numbers refer to that bundle, even when shipped code is minified. For minified builds and <code>check</code>, text locations include <code>(unminified)</code> and JSON artifact findings include <code>bundle: "unminified"</code>. <code>build --no-minify</code> writes the matching file and omits that marker. AST messages include a short code excerpt because <code>check</code> writes no artifact. Size rules measure shipped code. The default severities below come from <a href="https://github.com/mslavov/shelly-forge/blob/main/src/build/artifact-check.ts"><code>artifact-check.ts</code></a>. <code>--strict</code> promotes warnings to errors.</p>
     <div class="table-shell">
       <table class="rules">
         <thead><tr><th>Rule ID</th><th>Severity</th><th>Reported condition</th></tr></thead>
@@ -376,7 +377,7 @@ svg text { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemF
     </figure>
     <h3>Test the generated example</h3>
     <p>This test belongs beside the generated <code>src/example/hello.ts</code>. That script increments <code>example.hello.count</code> once per minute. The host test may use async functions; the device script uses named callbacks.</p>
-    <pre><code id="test-example">import { fileURLToPath } from 'node:url';
+    <pre tabindex="0" role="region" aria-label="Generated example test, scroll horizontally"><code id="test-example">import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { createShellyRuntime } from 'shelly-forge/testing';
 
@@ -399,7 +400,7 @@ test('persists the first counter value', async () =&gt; {
     <p>Host calls to <code>setStatus</code> and <code>emitEvent</code> copy their input before entering the script. Inputs that JSON cannot serialize, such as circular references or <code>BigInt</code>, throw <code>TypeError</code> to the caller without crashing the runtime, changing state, invoking handlers, or clearing queued work. Errors inside script handlers still crash the runtime.</p>
     <p>The simulator enforces 5 timers, 5 event handlers, 5 status handlers, 5 pending RPC calls, 10 MQTT subscriptions, and 5 HTTP endpoints. KVS allows 50 keys, with at most 42 UTF-8 bytes per key and 253 bytes per value. Non-string values use their serialized JSON size.</p>
     <div class="note">The simulator is not a security boundary for untrusted scripts. Unhandled RPC methods return error <code>-114</code> with <code>method not simulated: &lt;name&gt;</code>; supply a handler when a test needs them. BLE GAP parsing is not simulated, HTTP responses must be sent synchronously, and virtual component handles return <code>null</code>. Node's string behavior and execution engine are not the device interpreter.</div>
-    <p>Read the <a href="../skills/shelly-forge/reference/testing.md">testing guide</a> for fixtures and RPC failure examples. To test the exact minified output, build first and load its file with <code>loadArtifact</code>.</p>
+    <p>Read the <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/testing.md">testing guide</a> for fixtures and RPC failure examples. To test the exact minified output, build first and load its file with <code>loadArtifact</code>.</p>
   </section>
 
   <section class="section" id="emulator">
@@ -451,10 +452,10 @@ test('persists the first counter value', async () =&gt; {
     <p>Start <code>npx shelly-forge emulate</code> and set <code>DEVICE_HOSTNAME=127.0.0.1:8080</code> in the client project's <code>.env</code>. The default binding is loopback. <code>--port 0</code> selects a free port. Set <code>SHELLY_EMULATOR_PASSWORD</code> for server authentication and the same value as <code>SHELLY_PASSWORD</code> for the client. Ctrl+C closes the server and discards its in-memory state.</p>
     <p>A non-loopback bind requires a nonempty server password or exits 2. An empty password means no authentication. <code>--mdns</code> requires a non-loopback bind, such as <code>--bind 0.0.0.0</code>; it exits 2 on loopback. The server rejects requests with an <code>Origin</code> header and non-local <code>Host</code> headers on loopback.</p>
     <p>Scripts can use <code>Shelly.call</code> for the emulator's <code>Shelly.*</code>, <code>Sys.*</code>, and <code>Script.*</code> methods. Unknown methods return 404 <code>No handler for &lt;Method&gt;</code>.</p>
-    <p>Node-side tests can import <code>startEmulator</code> from <code>shelly-forge/emulator</code>, then call <code>close()</code> in cleanup. The API defaults to a free port and exposes status and event injection. See the <a href="../skills/shelly-forge/reference/cli.md#emulate">emulator reference</a> for options, supported RPC methods, log frames, and an API example.</p>
+    <p>Node-side tests can import <code>startEmulator</code> from <code>shelly-forge/emulator</code>, then call <code>close()</code> in cleanup. The API defaults to a free port and exposes status and event injection. See the <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/cli.md#emulate">emulator reference</a> for options, supported RPC methods, log frames, and an API example.</p>
     <div class="note">Node <code>vm</code> is not a security boundary. Only run code you trust. Top-level code, each callback, and eval have a 1000 ms synchronous execution limit. A timeout crashes the script; eval instead returns an error. Memory, CPU, timing, and engine quirks differ from hardware. Script resource fields are zero placeholders. Keep the emulator local and verify behavior on the target hardware.</div>
-    <p>See <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a> for the regular emulator end-to-end suite and the opt-in <code>npm run test:device</code> workflow with <code>SHELLY_E2E_HOST</code> and optional <code>SHELLY_E2E_PASSWORD</code>.</p>
-    <p class="src">Implementation: <a href="../src/emulator/index.ts">public API</a>, <a href="../src/emulator/server.ts">server</a>, <a href="../src/emulator/rpc.ts">RPC router</a>, <a href="../src/testing/engine.ts">script engine</a>, <a href="../src/testing/device-state.ts">shared device state</a>.</p>
+    <p>See <a href="https://github.com/mslavov/shelly-forge/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for the regular emulator end-to-end suite and the opt-in <code>npm run test:device</code> workflow with <code>SHELLY_E2E_HOST</code> and optional <code>SHELLY_E2E_PASSWORD</code>.</p>
+    <p class="src">Implementation: <a href="https://github.com/mslavov/shelly-forge/blob/main/src/emulator/index.ts">public API</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/emulator/server.ts">server</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/emulator/rpc.ts">RPC router</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/testing/engine.ts">script engine</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/testing/device-state.ts">shared device state</a>.</p>
   </section>
 
   <section class="section" id="loop">
@@ -498,7 +499,7 @@ test('persists the first counter value', async () =&gt; {
     </figure>
     <p>Dev enables debug logging, including with <code>--no-logs</code>. On Ctrl+C it closes watchers and streams and turns debug off only on devices where it enabled it. <code>--keep-debug</code> preserves that setting. Standalone <code>logs</code> enables debug by default and leaves it enabled; use <code>--no-enable-debug</code> to avoid that change.</p>
     <p>The first log connection failure per device outage emits a warning with its DNS, refusal, HTTP, or close reason. Repeats in the same outage use debug-level diagnostics. A successful connection resets warning suppression, so a later outage warns again. When a WebSocket upgrade returns a digest challenge, the stream reuses that header instead of making another request; it fetches a challenge only when the header is missing.</p>
-    <pre><code>npx shelly-forge --json status example/hello
+    <pre tabindex="0" role="region" aria-label="Device inspection commands, scroll horizontally"><code>npx shelly-forge --json status example/hello
 npx shelly-forge --json logs example/hello --duration 15 --lines 100
 npx shelly-forge --json eval example/hello 'Shelly.getUptimeMs()'
 npx shelly-forge --json rpc Shelly.GetDeviceInfo --script example/hello</code></pre>
@@ -519,13 +520,16 @@ npx shelly-forge --json rpc Shelly.GetDeviceInfo --script example/hello</code></
       </table>
     </div>
     <p>Status returns 5 for a missing script or reported runtime errors, and 4 for a device request error. A stopped script without reported errors does not by itself make status fail. In a long-running dev session, failed cycles are events; do not rely only on the final process exit code.</p>
-    <p class="src">Implementation: <a href="../src/core/errors.ts">error codes</a>, <a href="../src/commands/dev.ts">dev</a>, <a href="../src/commands/status.ts">status</a>, <a href="../src/commands/logs.ts">logs</a>.</p>
+    <p class="src">Implementation: <a href="https://github.com/mslavov/shelly-forge/blob/main/src/core/errors.ts">error codes</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/commands/dev.ts">dev</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/commands/status.ts">status</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/src/commands/logs.ts">logs</a>.</p>
   </section>
 
   <section class="section" id="agents">
     <h2>Working with agents</h2>
     <p class="lede">The agent workflow uses packaged skills and the same CLI that a person runs. The MCP server was removed in 0.4.0. Skills carry the device rules and workflow examples; the CLI executes commands and reports results.</p>
-    <p><a href="../skills/shelly-scripting/SKILL.md">shelly-scripting</a> covers device code. <a href="../skills/shelly-forge/SKILL.md">shelly-forge</a> covers testing, deployment, and debugging. Keeping these instructions with the package makes them available in an initialized project without a separate server.</p>
+    <p>First, install the skills with the Skills CLI, which requires Node.js 22.20 or newer:</p>
+    <pre tabindex="0" role="region" aria-label="Skills installation command, scroll horizontally"><code>npx skills add mslavov/shelly-forge --skill shelly-forge shelly-scripting</code></pre>
+    <p>Then ask the agent to create the project, write and run tests, and check the code. Require your confirmation before it makes changes to a real device. Shelly Forge itself requires Node.js 22.12 or newer.</p>
+    <p><a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-scripting/SKILL.md">shelly-scripting</a> covers device code. <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/SKILL.md">shelly-forge</a> covers testing, deployment, and debugging. Keeping these instructions with the package makes them available in an initialized project without a separate server.</p>
     <ul>
       <li><code>init &lt;name&gt;</code> copies the template, including <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and installs bundled skills unless <code>--no-skills</code> is set. Non-interactive use requires a project name.</li>
       <li><code>skills install</code> copies skills to <code>.agents/skills/</code> and stamps each with the package version. It creates relative <code>.claude/skills/</code> symlinks, with a copy fallback if symlinks fail. It does not create <code>AGENTS.md</code> in an existing project.</li>
@@ -535,13 +539,13 @@ npx shelly-forge --json rpc Shelly.GetDeviceInfo --script example/hello</code></
     <p><code>--json</code> puts result envelopes on stdout. <code>logs</code> and <code>dev</code> emit newline-delimited JSON events before their final envelope. Progress uses stderr. Every result envelope includes <code>exitCode</code>, and <code>ok</code> is true only when it is 0. Thrown failures include an error object with a code and message; optional hint and details fields add context.</p>
     <p>Always check the process exit code as well as the data. Status can return result data with <code>ok: false</code> and <code>exitCode: 4</code> or <code>5</code>, without an error object.</p>
     <p>Use bounded logs in non-interactive work, not a persistent dev process. Confirm the intended device before deploy, debug changes, or state-changing eval and RPC calls. The generated project's <code>AGENTS.md</code> asks for that confirmation; the CLI does not enforce an approval prompt.</p>
-    <p class="src">Installer: <a href="../src/scaffold/skills.ts"><code>skills.ts</code></a>. Output contract: <a href="../src/core/command.ts"><code>command.ts</code></a>. Command reference: <a href="../skills/shelly-forge/reference/cli.md">CLI guide</a>.</p>
+    <p class="src">Installer: <a href="https://github.com/mslavov/shelly-forge/blob/main/src/scaffold/skills.ts"><code>skills.ts</code></a>. Output contract: <a href="https://github.com/mslavov/shelly-forge/blob/main/src/core/command.ts"><code>command.ts</code></a>. Command reference: <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/cli.md">CLI guide</a>.</p>
   </section>
 
   <section class="section" id="project">
     <h2>Project and configuration</h2>
     <p class="lede">The generated project separates device code from Node.js tests. <code>create &lt;solution&gt; &lt;script&gt;</code> adds both files and a config entry. It refuses to replace existing files.</p>
-    <pre><code>src/example/hello.ts         Device automation
+    <pre tabindex="0" role="region" aria-label="Generated project files, scroll horizontally"><code>src/example/hello.ts         Device automation
 src/example/hello.test.ts    Vitest test in Node.js
 solutions.config.json       Entries and device targets
 tsconfig.json               Device types, no default library
@@ -552,7 +556,7 @@ AGENTS.md                   Generated project guide
 dist/                       Built JavaScript and manifest
 .shelly-forge/               Logs, deploy cache, last-good copies</code></pre>
     <p><code>tsconfig.json</code> uses <code>noLib: true</code> and <code>types: []</code>, includes the two packaged device declaration files, and excludes test files. <code>tsconfig.test.json</code> uses ES2022 and Node.js types. Both set <code>moduleDetection: "force"</code>, so scripts can share top-level names without an empty export. Project-wide interface extensions use <code>declare global</code>. The template's <code>npm run typecheck</code> checks both configurations.</p>
-    <pre><code>{
+    <pre tabindex="0" role="region" aria-label="Project configuration example, scroll horizontally"><code>{
   "$schema": "./node_modules/shelly-forge/schema/solutions.config.schema.json",
   "example": {
     "hello": {
@@ -570,7 +574,7 @@ dist/                       Built JavaScript and manifest
       <li>A script's <code>password</code> field takes precedence over <code>SHELLY_PASSWORD</code>. Neither should use the public prefix. Authentication uses the <code>admin</code> username.</li>
     </ul>
     <p>The deploy cache and last-good files live in this project, not on a remote service. Removing them loses the local skip and recovery history. The CLI cannot restore a previous version it has never saved.</p>
-    <p>See the <a href="../README.md">README</a> for setup and commands, the <a href="../templates/default/README.md">template guide</a> for the generated project, and the <a href="../schema/solutions.config.schema.json">configuration schema</a> for accepted fields.</p>
+    <p>See the <a href="https://github.com/mslavov/shelly-forge/blob/main/README.md">README</a> for setup and commands, the <a href="https://github.com/mslavov/shelly-forge/blob/main/templates/default/README.md">template guide</a> for the generated project, and the <a href="https://github.com/mslavov/shelly-forge/blob/main/schema/solutions.config.schema.json">configuration schema</a> for accepted fields.</p>
   </section>
 
   <section class="section" id="reading">
@@ -579,18 +583,18 @@ dist/                       Built JavaScript and manifest
       <div>
         <h3>Use the package</h3>
         <ul>
-          <li><a href="../README.md">README</a> for installation and everyday commands.</li>
-          <li><a href="../skills/shelly-forge/SKILL.md">CLI workflow skill</a>, with <a href="../skills/shelly-forge/reference/cli.md">command reference</a>, <a href="../skills/shelly-forge/reference/testing.md">testing</a>, and <a href="../skills/shelly-forge/reference/debugging.md">debugging</a>.</li>
-          <li><a href="../skills/shelly-scripting/SKILL.md">Device scripting skill</a> for language constraints and script patterns.</li>
-          <li><a href="../templates/default/src/example/hello.test.ts">Generated example tests</a> and <a href="../src/testing/types.ts">simulator API types</a>.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/README.md">README</a> for installation and everyday commands.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/SKILL.md">CLI workflow skill</a>, with <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/cli.md">command reference</a>, <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/testing.md">testing</a>, and <a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-forge/reference/debugging.md">debugging</a>.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/skills/shelly-scripting/SKILL.md">Device scripting skill</a> for language constraints and script patterns.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/templates/default/src/example/hello.test.ts">Generated example tests</a> and <a href="https://github.com/mslavov/shelly-forge/blob/main/src/testing/types.ts">simulator API types</a>.</li>
         </ul>
       </div>
       <div>
         <h3>Maintain the package</h3>
         <ul>
-          <li><a href="../CHANGELOG.md">Changelog</a> for release changes.</li>
-          <li><a href="../CONTRIBUTING.md">Contributing</a> for development and verification.</li>
-          <li><a href="../AGENTS.md">Repository agent guide</a> for contributor instructions, distinct from the generated project's guide.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/CHANGELOG.md">Changelog</a> for release changes.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/CONTRIBUTING.md">Contributing</a> for development and verification.</li>
+          <li><a href="https://github.com/mslavov/shelly-forge/blob/main/AGENTS.md">Repository agent guide</a> for contributor instructions, distinct from the generated project's guide.</li>
         </ul>
         <h3>Check device behavior</h3>
         <ul>
